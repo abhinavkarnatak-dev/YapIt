@@ -1,6 +1,7 @@
 import { generateToken } from "../config/generateToken.js";
 import { publishToQueue } from "../config/rabbitmq.js";
 import TryCatch from "../config/TryCatch.js";
+import { AuthenticatedRequest } from "../middleware/isAuth.js";
 import { User } from "../model/User.js";
 import { redisClient } from "../server.js";
 
@@ -23,7 +24,9 @@ export const loginUser = TryCatch(async (req, res) => {
 
     await redisClient.set(rateLimitKey, "1", { EX: 60 });
 
-    await redisClient.set(`user:${email}`, name, { EX: 60 * 5 });
+    if (name) {
+        await redisClient.set(`user:${email}`, name, { EX: 60 * 5 });
+    }
 
     const message = {
         to: email,
@@ -63,10 +66,17 @@ export const verifyUser = TryCatch(async (req, res) => {
         user = await User.create({ name: userName?.toString(), email });
     }
 
+    await redisClient.del(`user:${email}`);
+
     const token = generateToken({ id: user._id, email: user.email });
 
     return res.status(200).json({
         message: "OTP verified successfully.",
         user, token
     })
+})
+
+export const myProfile = TryCatch(async (req: AuthenticatedRequest, res) => {
+    const user = req.user;
+    return res.status(200).json({ user })
 })

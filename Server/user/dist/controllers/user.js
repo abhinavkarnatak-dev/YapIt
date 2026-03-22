@@ -15,7 +15,9 @@ export const loginUser = TryCatch(async (req, res) => {
     const otpExpiry = 60 * 5;
     await redisClient.set(otpKey, otp, { EX: otpExpiry });
     await redisClient.set(rateLimitKey, "1", { EX: 60 });
-    await redisClient.set(`user:${email}`, name, { EX: 60 * 5 });
+    if (name) {
+        await redisClient.set(`user:${email}`, name, { EX: 60 * 5 });
+    }
     const message = {
         to: email,
         otp,
@@ -42,9 +44,14 @@ export const verifyUser = TryCatch(async (req, res) => {
     if (!user) {
         user = await User.create({ name: userName?.toString(), email });
     }
+    await redisClient.del(`user:${email}`);
     const token = generateToken({ id: user._id, email: user.email });
     return res.status(200).json({
         message: "OTP verified successfully.",
         user, token
     });
+});
+export const myProfile = TryCatch(async (req, res) => {
+    const user = req.user;
+    return res.status(200).json({ user });
 });
