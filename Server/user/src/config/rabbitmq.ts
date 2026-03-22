@@ -17,3 +17,13 @@ export const connectRabbitMQ = async () => {
         console.log("RabbitMQ Connection Error", error);
     }
 }
+
+export const publishToQueue = async (queueName: string, message: any) => {
+    try {
+        await channel.assertQueue(queueName, { durable: true });
+        channel.sendToQueue(queueName, Buffer.from(JSON.stringify(message)), { persistent: true });
+        console.log("Message published to queue", queueName);
+    } catch (error) {
+        console.log("Error publishing message to queue", error);
+    }
+}
