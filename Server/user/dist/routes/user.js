@@ -6,6 +6,6 @@ router.post("/login", loginUser);
 router.post("/verify", verifyUser);
 router.get("/me", isAuth, myProfile);
 router.put("/user/update", isAuth, updateName);
-router.get("/user/:id", getAUser);
 router.get("/user/all", isAuth, getAllUsers);
+router.get("/user/:id", getAUser);
 export default router;
