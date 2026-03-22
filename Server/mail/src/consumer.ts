@@ -37,7 +37,7 @@ export const startSendingOTPConsumer = async () => {
                                     <h2>Verify your email</h2>
                                     <p>Your OTP for verifying your account on <b>YapIt</b> is:</p>
                                     <h3 style="color:#4f46e5;">${otp}</h3>
-                                    <p>This OTP is valid for a few minutes. If you didn't request this, please ignore.</p>
+                                    <p>This OTP is valid for 5 minutes. If you didn't request this, please ignore.</p>
                                 </div>`,
                     });
                     console.log(`OTP sent to ${to}`);
