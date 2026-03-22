@@ -66,3 +66,15 @@ export const updateName = TryCatch(async (req, res) => {
     const token = generateToken({ id: user._id, email: user.email });
     return res.status(200).json({ message: "Name updated successfully.", user, token });
 });
+export const getAUser = TryCatch(async (req, res) => {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) {
+        return res.status(404).json({ message: "User not found" });
+    }
+    return res.status(200).json({ user });
+});
+export const getAllUsers = TryCatch(async (req, res) => {
+    const users = await User.find();
+    return res.status(200).json({ users });
+});
