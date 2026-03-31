@@ -9,6 +9,10 @@ const schema = new Schema({
         required: true,
         unique: true,
     },
+    profilePic: {
+        type: String,
+        required: false,
+    }
 }, {
     timestamps: true,
 });

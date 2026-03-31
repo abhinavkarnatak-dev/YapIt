@@ -4,6 +4,7 @@ import TryCatch from "../config/TryCatch.js";
 import { AuthenticatedRequest } from "../middleware/isAuth.js";
 import { User } from "../model/User.js";
 import { redisClient } from "../server.js";
+import { uploadToS3 } from "../config/uploadToS3.js";
 
 export const loginUser = TryCatch(async (req, res) => {
     const { name, email } = req.body;
@@ -92,6 +93,23 @@ export const updateName = TryCatch(async (req: AuthenticatedRequest, res) => {
 
     const token = generateToken({ id: user._id, email: user.email });
     return res.status(200).json({ message: "Name updated successfully.", user, token })
+})
+
+export const updateProfilePic = TryCatch(async (req: AuthenticatedRequest, res) => {
+    const imageFile = req.file;
+    let imageUrl = "";
+    if (imageFile) {
+        imageUrl = await uploadToS3(imageFile, "profile-images");
+    }
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+        return res.status(404).json({ message: "User not found" });
+    }
+    user.profilePic = imageUrl;
+    await user.save();
+
+    const token = generateToken({ id: user._id, email: user.email });
+    return res.status(200).json({ message: "Profile picture updated successfully.", user, token })
 })
 
 export const getAUser = TryCatch(async (req: AuthenticatedRequest, res) => {
