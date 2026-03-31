@@ -44,7 +44,7 @@ export const startSendingOTPConsumer = async () => {
                     channel.ack(msg);
                 } catch (error) {
                     console.log("Error sending OTP", error);
-                    channel.nack(msg);
+                    channel.nack(msg, false, false);
                 }
             }
         });
