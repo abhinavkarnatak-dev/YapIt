@@ -6,6 +6,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
+import AuthHeader from '@/components/AuthHeader';
 const VerifyPage = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
@@ -93,6 +94,7 @@ const VerifyPage = () => {
     }
     return (
         <div className="bg-surface text-on-surface h-screen flex flex-col">
+            <AuthHeader />
             <main className="flex-grow flex items-center justify-center px-6 py-12 lg:py-20 relative overflow-hidden">
                 <div className="absolute top-[-10%] left-[-5%] w-96 h-96 bg-primary/10 rounded-full blur-[100px] -z-10"></div>
                 <div className="absolute bottom-[-10%] right-[-5%] w-[30rem] h-[30rem] bg-secondary/10 rounded-full blur-[120px] -z-10"></div>

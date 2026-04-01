@@ -13,8 +13,12 @@ const LoginPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent<HTMLElement>): Promise<void> => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+    if (!email.trim()) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
     setLoading(true);
     try {
       const { data } = await axios.post('http://localhost:8080/api/v1/login', { email });
@@ -75,7 +79,7 @@ const LoginPage = () => {
                 <p className="text-on-surface-variant">Sign in to access your chats</p>
               </div>
 
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleLogin}>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-on-surface px-1" htmlFor="email">Email Address</label>
                   <div className="relative group">
@@ -95,7 +99,7 @@ const LoginPage = () => {
                   </div>
                 </div>
                 <div className="pt-4">
-                  <button className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-full shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer" type="submit" onClick={handleLogin} disabled={loading}>
+                  <button className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-full shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer" type="submit" disabled={loading}>
                     {loading ? (<>
                       <span>Sending OTP</span><Loader2 className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </>
