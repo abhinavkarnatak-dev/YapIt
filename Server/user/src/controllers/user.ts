@@ -9,6 +9,16 @@ import { uploadToS3 } from "../config/uploadToS3.js";
 export const loginUser = TryCatch(async (req, res) => {
     const { name, email } = req.body;
 
+    const userExists = await User.findOne({ email });
+
+    if (req.path === '/signup' && userExists) {
+        return res.status(400).json({ message: "User already exists. Please log in." });
+    }
+
+    if (req.path === '/login' && !userExists) {
+        return res.status(404).json({ message: "User not found. Please sign up." });
+    }
+
     const rateLimitKey = `otp:ratelimit:${email}`;
     const rateLimit = await redisClient.get(rateLimitKey);
 

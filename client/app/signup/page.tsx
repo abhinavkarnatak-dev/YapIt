@@ -1,10 +1,52 @@
-import React from 'react';
+"use client";
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { HelpCircle, Mail, ArrowRight, User } from 'lucide-react';
 import AuthHeader from '@/components/AuthHeader';
 import AuthFooter from '@/components/AuthFooter';
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { useAppData, user_service } from '@/context/AppContext';
+import Loading from '@/components/Loading';
 
 const SignupPage = () => {
+    const { isAuth, userLoading } = useAppData();
+    const [name, setName] = useState<string>('');
+    const [email, setEmail] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(false);
+    const router = useRouter();
+
+    useEffect(() => {
+        if (isAuth) {
+            router.push("/chat");
+        }
+    }, [isAuth, router]);
+
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
+    if (!email.trim()) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data } = await axios.post(`${user_service}/api/v1/signup`, { name, email });
+      toast.success(data.message);
+      router.push(`/verify?email=${email}`);
+    } catch (error: any) {
+      console.error('Error signing up:', error.response.data.message);
+      toast.error(error.response.data.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if(userLoading || isAuth) {
+    return <Loading />
+  }
+
   return (
     <div className="bg-surface text-on-surface h-screen flex flex-col">
       <AuthHeader />
@@ -48,7 +90,7 @@ const SignupPage = () => {
                 <p className="text-on-surface-variant">Join the conversation in seconds</p>
               </div>
               
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleSignup}>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-on-surface px-1" htmlFor="name">Full Name</label>
                   <div className="relative group">
@@ -62,6 +104,8 @@ const SignupPage = () => {
                       placeholder="Your Name" 
                       required 
                       type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
                     />
                   </div>
                 </div>
@@ -79,12 +123,14 @@ const SignupPage = () => {
                       placeholder="Your Email" 
                       required 
                       type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
                 </div>
 
                 <div className="pt-4">
-                  <button className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-full shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer" type="submit">
+                  <button className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-full shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer" type="submit" disabled={loading}>
                     <span>Start Yapping</span>
                     <ArrowRight className="w-5 h-5" />
                   </button>

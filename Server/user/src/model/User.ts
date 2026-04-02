@@ -19,7 +19,7 @@ const schema: Schema<IUser> = new Schema(
     },
     profilePic: {
       type: String,
-      required: false,
+      default: "",
     }
   },
   {

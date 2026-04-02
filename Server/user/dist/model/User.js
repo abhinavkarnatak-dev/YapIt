@@ -11,7 +11,7 @@ const schema = new Schema({
     },
     profilePic: {
         type: String,
-        required: false,
+        default: "",
     }
 }, {
     timestamps: true,

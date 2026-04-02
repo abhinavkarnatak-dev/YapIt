@@ -1,27 +1,32 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { HelpCircle, Mail, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, ArrowRight, Loader2 } from 'lucide-react';
 import AuthHeader from '@/components/AuthHeader';
 import AuthFooter from '@/components/AuthFooter';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { useAppData, user_service } from '@/context/AppContext';
+import Loading from '@/components/Loading';
 const LoginPage = () => {
+  const { isAuth, userLoading } = useAppData();
   const [email, setEmail] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
 
+  useEffect(() => {
+    if (isAuth) {
+      router.push("/chat");
+    }
+  }, [isAuth, router]);
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    if (!email.trim()) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
     setLoading(true);
     try {
-      const { data } = await axios.post('http://localhost:8080/api/v1/login', { email });
+      const { data } = await axios.post(`${user_service}/api/v1/login`, { email });
       toast.success(data.message);
       router.push(`/verify?email=${email}`);
     } catch (error: any) {
@@ -31,6 +36,10 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
+
+  if(userLoading || isAuth) {
+    return <Loading />
+  }
 
   return (
     <div className="bg-surface text-on-surface h-screen flex flex-col">

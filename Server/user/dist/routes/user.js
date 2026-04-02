@@ -4,6 +4,7 @@ import { isAuth } from "../middleware/isAuth.js";
 import { upload } from "../middleware/multer.js";
 const router = express.Router();
 router.post("/login", loginUser);
+router.post("/signup", loginUser);
 router.post("/verify", verifyUser);
 router.get("/me", isAuth, myProfile);
 router.put("/user/update", isAuth, updateName);
