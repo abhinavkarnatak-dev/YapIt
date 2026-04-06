@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import axios from "axios";
 
@@ -38,6 +38,12 @@ interface AppContextType {
     isAuth: boolean;
     setUser: React.Dispatch<React.SetStateAction<User | null>>;
     setIsAuth: React.Dispatch<React.SetStateAction<boolean>>;
+    logoutUser: () => Promise<void>;
+    chats: Chats[] | null;
+    setChats: React.Dispatch<React.SetStateAction<Chats[] | null>>;
+    fetchChats: () => Promise<void>;
+    users: User[] | null;
+    fetchUsers: () => Promise<void>;
 }
 
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
@@ -75,12 +81,56 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
     }
 
-    React.useEffect(() => {
+    async function logoutUser() {
+        Cookies.remove("token");
+        setUser(null);
+        setIsAuth(false);
+    }
+
+    const [chats, setChats] = useState<Chats[] | null>(null);
+
+    async function fetchChats() {
+        const token = Cookies.get("token");
+        try {
+            const { data } = await axios.get(`${chat_service}/api/v1/chat/all`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            if (data.chats) {
+                setChats(data.chats);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const [users, setUsers] = useState<User[] | null>(null);
+
+    async function fetchUsers() {
+        const token = Cookies.get("token");
+        try {
+            const { data } = await axios.get(`${user_service}/api/v1/user/all`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            if (data.users) {
+                setUsers(data.users);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    useEffect(() => {
         fetchUser();
+        fetchChats();
+        fetchUsers();
     }, []);
 
     return (
-        <AppContext.Provider value={{ user, userLoading, isAuth, setUser, setIsAuth }}>
+        <AppContext.Provider value={{ user, userLoading, isAuth, setUser, setIsAuth, logoutUser, chats, setChats, fetchChats, users, fetchUsers }}>
             {children}
         </AppContext.Provider>
     );
