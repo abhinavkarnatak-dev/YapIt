@@ -53,7 +53,7 @@ export const getAllChats = TryCatch(async (req: AuthenticatedRequest, res) => {
                 const { data } = await axios.get(`${process.env.USER_SERVICE}/api/v1/user/${otherUserId}`);
 
                 return {
-                    user: data,
+                    user: data.user,
                     chat: {
                         ...chat.toObject(),
                         latestMessage: chat.latestMessage || null,
@@ -188,7 +188,7 @@ export const getMessagesByChat = TryCatch(async (req: AuthenticatedRequest, res)
             return;
         }
 
-        res.status(200).json({ messages, user: data });
+        res.status(200).json({ messages, user: data.user });
     } catch (error) {
         console.log(error);
         res.status(500).json({

@@ -41,7 +41,7 @@ export const getAllChats = TryCatch(async (req, res) => {
         try {
             const { data } = await axios.get(`${process.env.USER_SERVICE}/api/v1/user/${otherUserId}`);
             return {
-                user: data,
+                user: data.user,
                 chat: {
                     ...chat.toObject(),
                     latestMessage: chat.latestMessage || null,
@@ -148,7 +148,7 @@ export const getMessagesByChat = TryCatch(async (req, res) => {
             res.status(404).json({ message: "Other user not found" });
             return;
         }
-        res.status(200).json({ messages, user: data });
+        res.status(200).json({ messages, user: data.user });
     }
     catch (error) {
         console.log(error);

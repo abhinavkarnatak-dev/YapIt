@@ -1,5 +1,6 @@
 import { User } from '@/context/AppContext';
-import { CornerDownRight, CornerUpLeft, MessageCircle, Plus, Search, UserCircle, X } from 'lucide-react';
+import { CornerDownRight, CornerUpLeft, LogOut, MessageCircle, Plus, Search, UserCircle, X } from 'lucide-react';
+import Link from 'next/link';
 import React, { useState } from 'react'
 
 interface ChatSidebarProps {
@@ -20,22 +21,22 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, showAllUsers, setShowAllUser
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   return (
-    <aside className={`fixed z-20 sm:static top-0 left-0 h-screen w-80 bg-gray-900 border-r border-gray-700 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} sm:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col`}>
-      <div className='p-6 border-b border-gray-700'>
-        <div className='sm:hidden flex ustify-end mb-0'>
-          <button onClick={() => setSidebarOpen(false)} className='p-2 hover:bg-gray-700 rounded-lg transition-colors'>
-            <X className='w-5 h-5 text-gray-300' />
+    <aside className={`fixed z-20 sm:static top-0 left-0 h-screen w-80 bg-surface-container border-r border-surface-container-highest transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} sm:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col font-body`}>
+      <div className='p-6 border-b border-surface-container-highest'>
+        <div className='sm:hidden flex justify-end mb-0'>
+          <button onClick={() => setSidebarOpen(false)} className='p-2 hover:bg-surface-container-highest rounded-lg transition-colors cursor-pointer'>
+            <X className='w-5 h-5 text-on-surface-variant' />
           </button>
         </div>
 
         <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-2'>
-            <div className='p-2 justify-between'>
-              <MessageCircle className='w-5 h-5 text-white' />
+          <div className='flex items-center gap-3'>
+            <div className='p-2 flex items-center justify-center bg-primary/10 rounded-full'>
+              <MessageCircle className='w-5 h-5 text-primary' />
             </div>
-            <h2 className='text-xl font-bold text-white'>{showAllUsers ? "New Chat" : "Messages"}</h2>
+            <h2 className='text-xl font-bold text-on-surface font-headline'>{showAllUsers ? "New Chat" : "Messages"}</h2>
           </div>
-          <button className={`p-2.5 rounded-lg transition-colors ${showAllUsers ? " bg-red-600 hover:bg-red-700 text-white" : "bg-green-600 hover:bg-green-700 text-white cursor-pointer"}`} onClick={() => setShowAllUsers((prev) => !prev)}>
+          <button className={`p-2.5 rounded-full shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-surface cursor-pointer ${showAllUsers ? "bg-surface-variant hover:bg-surface-container-highest focus:ring-surface-variant text-on-surface" : "bg-primary hover:scale-[1.02] active:scale-95 focus:ring-primary text-on-primary shadow-primary/20"}`} onClick={() => setShowAllUsers((prev) => !prev)}>
             {showAllUsers ? <X className='w-4 h-4' /> : <Plus className='w-4 h-4' />}
           </button>
         </div>
@@ -44,65 +45,66 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, showAllUsers, setShowAllUser
       <div className='flex-1 overflow-hidden px-4 py-2'>
         {
           showAllUsers ? <div className='space-y-4 h-full'>
-            <div className='relative'>
-              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
-              <input type='text' placeholder='Search users' value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className='w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500' />
+            <div className='relative pt-2'>
+              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-outline mt-1' />
+              <input type='text' placeholder='Search users' value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className='w-full pl-10 pr-4 py-2.5 bg-surface-container-high border border-outline-variant rounded-full text-on-surface placeholder-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-body' />
             </div>
             <div className='space-y-2 overflow-y-auto h-full pb-4'>
               {
                 users?.filter((user) => user._id !== loggedInUser?._id && user.name.toLowerCase().includes(searchQuery.toLowerCase())).map((user) => (
-                  <div key={user._id} className='flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg cursor-pointer' onClick={() => {
+                  <div key={user._id} className='flex items-center gap-3 p-3 hover:bg-surface-container-high rounded-xl cursor-pointer transition-colors' onClick={() => {
                     setSelectedUser(user._id);
                     setSidebarOpen(false);
                   }}>
-                    <div className='w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center'>
+                    <div className='w-11 h-11 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-base shadow-sm'>
                       {
-                        user.profilePic ? <img src={user.profilePic} alt={user.name} className='w-10 h-10 rounded-full object-cover' /> : <span className='w-10 h-10 flex items-center justify-center text-white font-bold'>{user.name.charAt(0).toUpperCase()}{user.name.charAt(user.name.length - 1).toUpperCase()}</span>
+                        user.profilePic ? <img src={user.profilePic} alt={user.name} className='w-11 h-11 rounded-full object-cover' /> : <span>{user.name.charAt(0).toUpperCase()}{user.name.charAt(user.name.length - 1).toUpperCase()}</span>
                       }
                     </div>
                     <div className='flex-1'>
-                      <h3 className='text-white font-bold'>{user.name}</h3>
-                      <p></p> { /* To show online status */}
+                      <h3 className='text-on-surface font-bold text-[15px]'>{user.name}</h3>
+                      { /* To show online status */}
                     </div>
                   </div>
                 ))
               }
             </div>
           </div> : (
-            chats && chats.length > 0 ? <div className='space-y-2 overflow-y-auto h-full pb-4'>
+            chats && chats.length > 0 ? <div className='space-y-1.5 overflow-y-auto h-full pb-4 pt-1'>
               {chats.map((chat) => {
-                const latestMessage = chat.chat.latestMessge
+                const latestMessage = chat.chat.latestMessage
                 const isSelected = selectedUser === chat.chat._id;
-                const isSentByMe = latestMessage?.senderId === loggedInUser?._id;
+                const isSentByMe = latestMessage?.sender === loggedInUser?._id;
                 const unseenCount = chat.chat.unseenCount || 0
 
                 return <button key={chat.chat._id} onClick={() => {
                   setSelectedUser(chat.chat._id);
                   setSidebarOpen(false);
-                }} className={`w-full text-left p-4 rounded-lg transition-colors ${isSelected ? "bg-blue-600 border border-blue-500" : "border-gray-700 hover:bg-gray-600"}`}>
-                  <div className='flex items-center gap-3'>
+                }} className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer ${isSelected ? "bg-primary-container/30 border border-primary/20 shadow-[0_4px_12px_rgba(106,28,246,0.05)]" : "border-transparent hover:bg-surface-container-high"}`}>
+                  <div className='flex items-center gap-3.5'>
                     <div className='relative'>
-                      <div className='w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center'>
-                        {/* TODO: Add profile pic  and online status*/}
-
+                      <div className='w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center shadow-sm text-on-surface-variant font-bold text-lg border border-outline-variant/30'>
+                        {
+                          chat.user?.profilePic ? <img src={chat.user.profilePic} alt={chat.user.name} className='w-12 h-12 rounded-full object-cover' /> : <span>{(chat.user?.name && chat.user.name.length > 0) ? `${chat.user.name.charAt(0).toUpperCase()}${chat.user.name.charAt(chat.user.name.length - 1).toUpperCase()}` : ''}</span>
+                        }
                       </div>
                     </div>
                     <div className='flex-1 min-w-0'>
-                      <div className='flex items-center justify-between mb-1'>
-                        <span className={`font-semibold truncate ${isSelected ? "text-white" : "text-gray-200"}`}>
+                      <div className='flex items-center justify-between mb-0.5'>
+                        <span className={`font-semibold truncate text-[15px] ${isSelected ? "text-on-surface" : "text-on-surface"}`}>
                           {chat.user.name}
                         </span>
                         {unseenCount > 0 &&
-                          <div className="bg-green-600 text-white text-xs font-bold rounded-full min-w-22px h-5.5 flex items-center justify-center px-2">
+                          <div className="bg-primary text-on-primary text-[10px] font-bold rounded-full min-w-5 h-5 flex items-center justify-center px-1.5 ml-2 shadow-sm">
                             {unseenCount > 99 ? "99+" : unseenCount}
                           </div>
                         }
                       </div>
                       {
                         latestMessage && (
-                          <div className='flex items-center gap-2'>
-                            {isSentByMe ? <CornerUpLeft size={14} className='text-blue-400 text-shrink-0' /> : <CornerDownRight size={14} className='text-green-400 text-shrink-0' />}
-                            <span className={"text-sm text-gray-400 flex-1 truncate"}>
+                          <div className='flex items-center gap-1.5'>
+                            {isSentByMe ? <CornerUpLeft size={14} className='text-primary shrink-0 opacity-80' /> : <CornerDownRight size={14} className='text-secondary shrink-0 opacity-80' />}
+                            <span className={`text-[13px] flex-1 truncate ${isSelected ? "text-on-surface-variant" : "text-outline"}`}>
                               {latestMessage.text}
                             </span>
                           </div>
@@ -112,9 +114,29 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, showAllUsers, setShowAllUser
                   </div>
                 </button>
               })}
-            </div> : <div></div>
+            </div> : <div className='flex flex-col items-center justify-center h-full text-center'>
+              <div className='p-5 bg-surface-container-highest rounded-full mb-4 opacity-70'>
+                <MessageCircle className='w-8 h-8 text-outline' />
+              </div>
+              <p className='text-on-surface font-semibold text-lg font-headline'>No chats yet</p>
+              <p className='text-on-surface-variant text-sm mt-1 max-w-[80%] leading-snug'>Start a conversation by adding a user via the plus button.</p>
+            </div>
           )
         }
+      </div>
+      <div className='p-4 border-t border-surface-container-highest space-y-1.5'>
+        <Link href="/profile" className='flex items-center gap-3.5 px-4 py-3 rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group'>
+          <div className='p-2 bg-surface-container-highest rounded-lg group-hover:bg-primary/10 transition-colors'>
+            <UserCircle className='w-5 h-5 text-on-surface-variant group-hover:text-primary transition-colors' />
+          </div>
+          <span className='text-on-surface font-semibold text-sm'>Profile</span>
+        </Link>
+        <button onClick={handleLogout} className='w-full flex items-center gap-3.5 px-4 py-3 rounded-xl hover:bg-error-container/30 transition-colors text-error group cursor-pointer'>
+          <div className='p-2 bg-error/10 rounded-lg group-hover:bg-error transition-colors'>
+            <LogOut className='w-5 h-5 text-error group-hover:text-on-error transition-colors' />
+          </div>
+          <span className='font-semibold text-sm'>Logout</span>
+        </button>
       </div>
     </aside>
   )
