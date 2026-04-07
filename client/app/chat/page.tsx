@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from 'react'
-import { useAppData, User } from '@/context/AppContext'
+import { chat_service, useAppData, User } from '@/context/AppContext'
 import Loading from '@/components/Loading'
 import { useRouter } from 'next/navigation';
 import ChatSidebar from '@/components/ChatSidebar';
+import toast from 'react-hot-toast';
+import Cookies from 'js-cookie';
+import axios from 'axios';
 
 export interface Message {
   _id: string;
@@ -22,14 +25,12 @@ export interface Message {
 }
 
 const ChatPage = () => {
-  const { isAuth, userLoading, logoutUser, chats, user: loggedInUser, users, fetchChats, setChats } = useAppData();
+  const { isAuth, userLoading, logoutUser, chats, user: loggedInUser, fetchChats, setChats } = useAppData();
 
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [message, setMessage] = useState<string>("");
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[] | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [showAllUser, setShowAllUser] = useState<boolean>(false);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [typingTimeOut, setTypingTimeOut] = useState<NodeJS.Timeout | null>(null);
 
@@ -52,18 +53,16 @@ const ChatPage = () => {
 
   return (
     <div className='min-h-screen flex bg-gray-900 text-white overflow-hidden relative'>
-      <ChatSidebar 
+      <ChatSidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
-        showAllUsers={showAllUser}
-        setShowAllUsers={setShowAllUser}
-        users={users}
         loggedInUser={loggedInUser}
         chats={chats}
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
         handleLogout={handleLogout}
       />
+      <div className='flex-1 flex flex-col justify-between p-4 backdrop-blur-xl bg-white/5 border-1 border-white/10'></div>
     </div>
   )
 }

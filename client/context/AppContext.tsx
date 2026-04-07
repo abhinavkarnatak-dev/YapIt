@@ -14,6 +14,14 @@ export interface User {
     profilePic: string;
 }
 
+export interface ConnectionReq {
+    _id: string;
+    sender: User;
+    receiver: string;
+    status: string;
+    createdAt: string;
+}
+
 export interface Chat {
     _id: string;
     users: string[];
@@ -42,8 +50,8 @@ interface AppContextType {
     chats: Chats[] | null;
     setChats: React.Dispatch<React.SetStateAction<Chats[] | null>>;
     fetchChats: () => Promise<void>;
-    users: User[] | null;
-    fetchUsers: () => Promise<void>;
+    incomingReqs: ConnectionReq[] | null;
+    fetchIncomingReqs: () => Promise<void>;
 }
 
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
@@ -105,32 +113,33 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
     }
 
-    const [users, setUsers] = useState<User[] | null>(null);
+    const [incomingReqs, setIncomingReqs] = useState<ConnectionReq[] | null>(null);
 
-    async function fetchUsers() {
+    async function fetchIncomingReqs() {
         const token = Cookies.get("token");
+        if (!token) return;
         try {
-            const { data } = await axios.get(`${user_service}/api/v1/user/all`, {
+            const { data } = await axios.get(`${user_service}/api/v1/user/requests`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
             });
-            if (data.users) {
-                setUsers(data.users);
+            if (data.requests) {
+                setIncomingReqs(data.requests);
             }
         } catch (error) {
-            console.error(error);
+            console.error("Failed to fetch incoming requests", error);
         }
     }
 
     useEffect(() => {
         fetchUser();
         fetchChats();
-        fetchUsers();
+        fetchIncomingReqs();
     }, []);
 
     return (
-        <AppContext.Provider value={{ user, userLoading, isAuth, setUser, setIsAuth, logoutUser, chats, setChats, fetchChats, users, fetchUsers }}>
+        <AppContext.Provider value={{ user, userLoading, isAuth, setUser, setIsAuth, logoutUser, chats, setChats, fetchChats, incomingReqs, fetchIncomingReqs }}>
             {children}
         </AppContext.Provider>
     );

@@ -52,3 +52,52 @@ export const startSendingOTPConsumer = async () => {
         console.log("Error connecting to RabbitMQ", error);
     }
 };
+export const startConnectionRequestConsumer = async () => {
+    try {
+        const connection = await amqp.connect({
+            protocol: "amqp",
+            hostname: process.env.RABBITMQ_HOST,
+            port: 5672,
+            username: process.env.RABBITMQ_USERNAME,
+            password: process.env.RABBITMQ_PASSWORD,
+        });
+        const channel = await connection.createChannel();
+        const queueName = "send-connection-req";
+        await channel.assertQueue(queueName, { durable: true });
+        console.log("Mail Service Consumer is running and waiting for Connection Requests...");
+        channel.consume(queueName, async (msg) => {
+            if (msg) {
+                try {
+                    const { to, senderName } = JSON.parse(msg.content.toString());
+                    const transporter = nodemailer.createTransport({
+                        host: "smtp.gmail.com",
+                        port: 465,
+                        auth: {
+                            user: process.env.EMAIL_USER,
+                            pass: process.env.EMAIL_PASS,
+                        },
+                    });
+                    await transporter.sendMail({
+                        from: "YapIt",
+                        to,
+                        subject: "New Connection Request on YapIt",
+                        html: `<div style="font-family:sans-serif;">
+                                    <h2>You have received a connection request!</h2>
+                                    <p><b>${senderName || 'Someone'}</b> wants to connect with you on <b>YapIt</b>.</p>
+                                    <p>To accept the request and start chatting, please open the YapIt app.</p>
+                                </div>`,
+                    });
+                    console.log(`Connection request email sent to ${to}`);
+                    channel.ack(msg);
+                }
+                catch (error) {
+                    console.log("Error sending connection request email", error);
+                    channel.nack(msg, false, false);
+                }
+            }
+        });
+    }
+    catch (error) {
+        console.log("Error connecting to RabbitMQ", error);
+    }
+};

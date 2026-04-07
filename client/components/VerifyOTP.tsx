@@ -11,7 +11,7 @@ import { useAppData, user_service } from '@/context/AppContext';
 import Loading from './Loading';
 
 const VerifyOtp = () => {
-    const { isAuth, setIsAuth, setUser, userLoading, fetchChats, fetchUsers } = useAppData();
+    const { isAuth, setIsAuth, setUser, userLoading, fetchChats, fetchIncomingReqs } = useAppData();
     const [loading, setLoading] = useState<boolean>(false);
     const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
     const [resendLoading, setResendLoading] = useState<boolean>(false);
@@ -90,7 +90,7 @@ const VerifyOtp = () => {
             setIsAuth(true);
             setUser(data.user);
             fetchChats();
-            fetchUsers();
+            fetchIncomingReqs();
             setOtp(['', '', '', '', '', '']);
             inputRefs.current[0]?.focus();
             router.push(`/chat`);

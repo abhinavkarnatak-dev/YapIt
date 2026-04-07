@@ -4,6 +4,7 @@ import { Chat } from "../models/Chat.js";
 import { Messages } from "../models/Messages.js";
 import axios from "axios";
 import { uploadToS3 } from "../config/uploadToS3.js";
+import { user_service } from "../config/Services.js";
 
 export const createNewChat = TryCatch(async (req: AuthenticatedRequest, res) => {
     const userId = req.user?._id;
@@ -50,10 +51,10 @@ export const getAllChats = TryCatch(async (req: AuthenticatedRequest, res) => {
             });
 
             try {
-                const { data } = await axios.get(`${process.env.USER_SERVICE}/api/v1/user/${otherUserId}`);
+                const { data } = await axios.get(`${user_service}/api/v1/user/${otherUserId}`);
 
                 return {
-                    user: data.user,
+                    user: data?.user,
                     chat: {
                         ...chat.toObject(),
                         latestMessage: chat.latestMessage || null,
@@ -181,7 +182,7 @@ export const getMessagesByChat = TryCatch(async (req: AuthenticatedRequest, res)
     const otherUserId = chat.users.find((id) => id.toString() !== userId.toString());
 
     try {
-        const { data } = await axios.get(`${process.env.USER_SERVICE}/api/v1/user/${otherUserId}`);
+        const { data } = await axios.get(`${user_service}/api/v1/user/${otherUserId}`);
 
         if (!otherUserId) {
             res.status(404).json({ message: "Other user not found" });
@@ -197,3 +198,30 @@ export const getMessagesByChat = TryCatch(async (req: AuthenticatedRequest, res)
         });
     }
 })
+
+export const deleteChat = TryCatch(async (req: AuthenticatedRequest, res) => {
+    const userId = req.user?._id;
+    const { otherUserId } = req.params;
+
+    if (!userId || !otherUserId) {
+        res.status(400).json({ message: "User IDs are required" });
+        return;
+    }
+
+    const chat = await Chat.findOne({
+        users: { $all: [userId, otherUserId], $size: 2 }
+    });
+
+    if (!chat) {
+        res.status(404).json({ message: "Chat not found" });
+        return;
+    }
+
+    // Delete all messages referencing the chat
+    await Messages.deleteMany({ chatId: chat._id });
+    
+    // Delete the chat itself
+    await chat.deleteOne();
+
+    res.status(200).json({ message: "Chat deleted successfully" });
+});

@@ -1,10 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
-import { startSendingOTPConsumer } from "./consumer.js";
+import { startConnectionRequestConsumer, startSendingOTPConsumer } from "./consumer.js";
 
 dotenv.config();
 
 startSendingOTPConsumer();
+startConnectionRequestConsumer();
 
 const app = express();
 
