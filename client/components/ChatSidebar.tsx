@@ -218,14 +218,15 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selecte
               </div>
             )}
           </div> : (
-            chats && chats.length > 0 ? <div className='space-y-1.5 overflow-y-auto h-full pb-4 pt-1'>
+            chats && chats.length > 0 ? <div className='space-y-1.5 overflow-y-auto h-full pb-4 pt-1' onClick={() => setSelectedUser(null)}>
               {chats.map((chat) => {
                 const latestMessage = chat.chat.latestMessage
                 const isSelected = selectedUser === chat.chat._id;
                 const isSentByMe = latestMessage?.sender === loggedInUser?._id;
                 const unseenCount = chat.chat.unseenCount || 0
 
-                return <button key={chat.chat._id} onClick={() => {
+                return <button key={chat.chat._id} onClick={(e) => {
+                  e.stopPropagation();
                   setSelectedUser(chat.chat._id);
                   setSidebarOpen(false);
                 }} className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer group/chat relative ${isSelected ? "bg-primary-container/30 border border-primary/20 shadow-[0_4px_12px_rgba(106,28,246,0.05)]" : "border-transparent hover:bg-surface-container-high"}`}>

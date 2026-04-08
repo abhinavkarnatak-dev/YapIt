@@ -11,10 +11,10 @@ const schema = new Schema({
     },
     text: {
         type: String,
-        image: {
-            publicId: String,
-            url: String
-        },
+    },
+    image: {
+        publicId: String,
+        url: String
     },
     messageType: {
         type: String,
@@ -28,6 +28,14 @@ const schema = new Schema({
     seenAt: {
         type: Date,
         default: null
+    },
+    deletedBy: {
+        type: [String],
+        default: []
+    },
+    deletedForEveryone: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 export const Messages = mongoose.model("Message", schema);

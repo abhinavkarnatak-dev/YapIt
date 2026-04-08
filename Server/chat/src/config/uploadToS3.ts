@@ -2,7 +2,8 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3 } from "./s3.js";
 
 export const uploadToS3 = async (file: Express.Multer.File, folder: string) => {
-    const fileName = `${Date.now()}-${file.originalname}`;
+    const sanitizedOriginalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '-');
+    const fileName = `${Date.now()}-${sanitizedOriginalName}`;
 
     const command = new PutObjectCommand({
         Bucket: process.env.AWS_BUCKET_NAME!,

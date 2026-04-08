@@ -177,9 +177,23 @@ export const getMessagesByChat = TryCatch(async (req: AuthenticatedRequest, res)
         }
     );
 
-    const messages = await Messages.find({ chatId }).sort({ createdAt: 1 });
+    const messages = await Messages.find({ 
+        chatId,
+        deletedBy: { $ne: userId.toString() }
+    }).sort({ createdAt: 1 });
 
     const otherUserId = chat.users.find((id) => id.toString() !== userId.toString());
+
+    // Censor deleted messages for network transit without altering DB
+    const censoredMessages = messages.map(msg => {
+        if (msg.deletedForEveryone) {
+            const tempObj = msg.toObject();
+            delete tempObj.text;
+            delete tempObj.image;
+            return tempObj;
+        }
+        return msg;
+    });
 
     try {
         const { data } = await axios.get(`${user_service}/api/v1/user/${otherUserId}`);
@@ -189,11 +203,11 @@ export const getMessagesByChat = TryCatch(async (req: AuthenticatedRequest, res)
             return;
         }
 
-        res.status(200).json({ messages, user: data.user });
+        res.status(200).json({ messages: censoredMessages, user: data.user });
     } catch (error) {
         console.log(error);
         res.status(500).json({
-            messages,
+            messages: censoredMessages,
             user: { _id: otherUserId, name: "Unknown User" }
         });
     }
@@ -220,8 +234,42 @@ export const deleteChat = TryCatch(async (req: AuthenticatedRequest, res) => {
     // Delete all messages referencing the chat
     await Messages.deleteMany({ chatId: chat._id });
     
-    // Delete the chat itself
-    await chat.deleteOne();
-
     res.status(200).json({ message: "Chat deleted successfully" });
+});
+
+export const deleteMessage = TryCatch(async (req: AuthenticatedRequest, res) => {
+    const userId = req.user?._id;
+    const { messageId } = req.params;
+    const { type } = req.body; // "everyone" or "me"
+
+    if (!userId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+    }
+
+    const message = await Messages.findById(messageId);
+    if (!message) {
+        res.status(404).json({ message: "Message not found" });
+        return;
+    }
+
+    if (type === "everyone") {
+        if (message.sender.toString() !== userId.toString()) {
+            res.status(403).json({ message: "You can only delete your own messages for everyone" });
+            return;
+        }
+        
+        message.deletedForEveryone = true;
+        await message.save();
+    } else if (type === "me") {
+        if (!message.deletedBy.includes(userId.toString())) {
+            message.deletedBy.push(userId.toString());
+            await message.save();
+        }
+    } else {
+        res.status(400).json({ message: "Invalid delete type" });
+        return;
+    }
+
+    res.status(200).json({ message: "Message deleted successfully", deletedMessage: message });
 });

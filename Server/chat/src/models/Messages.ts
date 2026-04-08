@@ -8,6 +8,8 @@ export interface IMessage extends Document {
     messageType: "text" | "image";
     seen: boolean;
     seenAt?: Date;
+    deletedBy: string[];
+    deletedForEveryone: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -24,10 +26,10 @@ const schema = new Schema<IMessage>({
     },
     text: {
         type: String,
-        image: {
-            publicId: String,
-            url: String
-        },
+    },
+    image: {
+        publicId: String,
+        url: String
     },
     messageType: {
         type: String,
@@ -41,6 +43,14 @@ const schema = new Schema<IMessage>({
     seenAt: {
         type: Date,
         default: null
+    },
+    deletedBy: {
+        type: [String],
+        default: []
+    },
+    deletedForEveryone: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 

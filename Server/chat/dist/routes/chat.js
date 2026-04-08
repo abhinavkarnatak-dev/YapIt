@@ -1,5 +1,5 @@
 import express from "express";
-import { createNewChat, getAllChats, getMessagesByChat, sendMessage, deleteChat } from "../controllers/chat.js";
+import { createNewChat, getAllChats, getMessagesByChat, sendMessage, deleteChat, deleteMessage } from "../controllers/chat.js";
 import isAuth from "../middlewares/isAuth.js";
 import { upload } from "../middlewares/multer.js";
 const router = express.Router();
@@ -7,5 +7,6 @@ router.post("/chat/new", isAuth, createNewChat);
 router.get("/chat/all", isAuth, getAllChats);
 router.post("/message", isAuth, upload.single("image"), sendMessage);
 router.get("/message/:chatId", isAuth, getMessagesByChat);
+router.delete("/message/:messageId", isAuth, deleteMessage);
 router.delete("/chat/remove/:otherUserId", isAuth, deleteChat);
 export default router;

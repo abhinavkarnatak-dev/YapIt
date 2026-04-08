@@ -3,6 +3,7 @@ import { User } from "../model/User.js";
 import { ConnectionRequest } from "../model/ConnectionRequest.js";
 import { publishToQueue } from "../config/rabbitmq.js";
 import axios from "axios";
+import { chat_service } from "../config/Services.js";
 export const getUserByEmail = TryCatch(async (req, res) => {
     const { email } = req.body;
     if (!email) {
@@ -48,7 +49,6 @@ export const sendConnectionRequest = TryCatch(async (req, res) => {
             return res.status(400).json({ message: "This user has already sent you a request. Check your incoming requests." });
         }
     }
-    // Check if rejected previously and re-requesting
     const rejectedRequest = await ConnectionRequest.findOne({
         sender: senderId,
         receiver: receiver._id,
@@ -66,7 +66,6 @@ export const sendConnectionRequest = TryCatch(async (req, res) => {
         });
         console.log("Created new connection request:", nr);
     }
-    // Publish email message
     const message = {
         to: email,
         senderName: req.user?.name,
@@ -104,8 +103,7 @@ export const acceptConnectionRequest = TryCatch(async (req, res) => {
     request.status = 'accepted';
     await request.save();
     try {
-        // Create chat automatically via Chat Service
-        await axios.post(`${process.env.CHAT_SERVICE || 'http://localhost:5002'}/api/v1/chat/new`, {
+        await axios.post(`${chat_service}/api/v1/chat/new`, {
             userId: userId,
             otherUserId: request.sender
         }, {
