@@ -2,11 +2,17 @@ import jwt from "jsonwebtoken";
 export const isAuth = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            res.status(401).json({ message: 'Please Login - No Auth Header' });
+        let token = "";
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1];
+        }
+        else if (req.query.token) {
+            token = req.query.token;
+        }
+        if (!token) {
+            res.status(401).json({ message: 'Please Login - No Auth Token' });
             return;
         }
-        const token = authHeader.split(' ')[1];
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
         if (!decodedToken || !decodedToken.id) {
             res.status(401).json({ message: 'Invalid Token' });

@@ -1,12 +1,15 @@
 import express from "express";
-import { createNewChat, getAllChats, getMessagesByChat, sendMessage, deleteChat, deleteMessage } from "../controllers/chat.js";
+import { createNewChat, getAllChats, getMessagesByChat, sendMessage, deleteChat, deleteMessage, markMessagesAsSeen, downloadDocument, editMessage } from "../controllers/chat.js";
 import isAuth from "../middlewares/isAuth.js";
 import { upload } from "../middlewares/multer.js";
 const router = express.Router();
 router.post("/chat/new", isAuth, createNewChat);
 router.get("/chat/all", isAuth, getAllChats);
-router.post("/message", isAuth, upload.single("image"), sendMessage);
+router.post("/message", isAuth, upload.single("file"), sendMessage);
 router.get("/message/:chatId", isAuth, getMessagesByChat);
+router.get("/message/download/:messageId", isAuth, downloadDocument);
+router.put("/message/seen/:chatId", isAuth, markMessagesAsSeen);
+router.put("/message/edit/:messageId", isAuth, editMessage);
 router.delete("/message/:messageId", isAuth, deleteMessage);
 router.delete("/chat/remove/:otherUserId", isAuth, deleteChat);
 export default router;

@@ -14,11 +14,19 @@ export interface AuthenticatedRequest extends Request {
 export const isAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            res.status(401).json({ message: 'Please Login - No Auth Header' })
+        let token = "";
+        
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1];
+        } else if (req.query.token) {
+            token = req.query.token as string;
+        }
+
+        if (!token) {
+            res.status(401).json({ message: 'Please Login - No Auth Token' })
             return
         }
-        const token = authHeader.split(' ')[1];
+        
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
         if (!decodedToken || !decodedToken.id) {
             res.status(401).json({ message: 'Invalid Token' });

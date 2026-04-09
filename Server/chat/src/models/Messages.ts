@@ -5,11 +5,21 @@ export interface IMessage extends Document {
     sender: string;
     text?: string;
     image?: { publicId: string; url: string };
-    messageType: "text" | "image";
+    document?: { url: string; originalName: string; size: number; format: string };
+    messageType: "text" | "image" | "document";
     seen: boolean;
     seenAt?: Date;
     deletedBy: string[];
     deletedForEveryone: boolean;
+    linkPreview?: {
+        title?: string;
+        description?: string;
+        image?: { url: string };
+        logo?: { url: string };
+        publisher?: string;
+    };
+    isEdited?: boolean;
+    editHistory?: { text: string; editedAt: Date }[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -31,9 +41,15 @@ const schema = new Schema<IMessage>({
         publicId: String,
         url: String
     },
+    document: {
+        url: String,
+        originalName: String,
+        size: Number,
+        format: String
+    },
     messageType: {
         type: String,
-        enum: ["text", "image"],
+        enum: ["text", "image", "document"],
         default: "text",
     },
     seen: {
@@ -51,7 +67,22 @@ const schema = new Schema<IMessage>({
     deletedForEveryone: {
         type: Boolean,
         default: false
-    }
+    },
+    linkPreview: {
+        title: String,
+        description: String,
+        image: { url: String },
+        logo: { url: String },
+        publisher: String
+    },
+    isEdited: {
+        type: Boolean,
+        default: false
+    },
+    editHistory: [{
+        text: String,
+        editedAt: Date
+    }]
 }, { timestamps: true });
 
 export const Messages = mongoose.model<IMessage>("Message", schema);

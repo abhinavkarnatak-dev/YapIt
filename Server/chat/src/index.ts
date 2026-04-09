@@ -8,7 +8,7 @@ dotenv.config();
 
 connectDB();
 
-const app = express();
+import { app, server } from "./socket.js";
 
 app.use(express.json());
 
@@ -23,6 +23,6 @@ const PORT = process.env.PORT || 3001;
 
 app.use("/api/v1", chatRoutes);
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Listening on port ${PORT}`);
 });

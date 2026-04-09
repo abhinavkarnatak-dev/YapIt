@@ -1,10 +1,11 @@
 import { chat_service, useAppData, user_service, User } from '@/context/AppContext';
-import { CornerDownRight, CornerUpLeft, LogOut, MessageCircle, Plus, Search, UserCircle, X, Check, Mail, UserPlus, Inbox, Trash2 } from 'lucide-react';
+import { CornerDownRight, CornerUpLeft, LogOut, MessageCircle, Plus, Search, UserCircle, X, Check, Mail, UserPlus, Inbox, Trash2, FileText, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState } from 'react'
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
+import { useSocket } from '@/context/SocketContext';
 
 interface ChatSidebarProps {
   sidebarOpen: boolean;
@@ -14,14 +15,33 @@ interface ChatSidebarProps {
   selectedUser: string | null;
   setSelectedUser: (userId: string | null) => void;
   handleLogout: () => void;
+  typingUsers: string[];
 }
+const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selectedUser, setSelectedUser, handleLogout, typingUsers }: ChatSidebarProps) => {
 
-const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selectedUser, setSelectedUser, handleLogout }: ChatSidebarProps) => {
+  const formatMessageTime = (dateStr?: string) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const today = new Date();
+    const isToday = date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+    if (isToday) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = date.getDate() === yesterday.getDate() && date.getMonth() === yesterday.getMonth() && date.getFullYear() === yesterday.getFullYear();
+    if (isYesterday) {
+      return "Yesterday";
+    }
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  };
+
 
   const { incomingReqs, fetchIncomingReqs, fetchChats } = useAppData();
+  const { onlineUsers } = useSocket();
   const [activeView, setActiveView] = useState<'chats' | 'add-friend'>('chats');
   const [addFriendTab, setAddFriendTab] = useState<'send' | 'incoming'>('send');
-  
+
   const [emailQuery, setEmailQuery] = useState<string>("");
   const [foundUser, setFoundUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -117,7 +137,14 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selecte
   };
 
   return (
-    <aside className={`fixed z-20 sm:static top-0 left-0 h-screen w-80 bg-surface-container border-r border-surface-container-highest transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} sm:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col font-body`}>
+    <aside
+      className={`fixed z-20 sm:static top-0 left-0 h-screen w-80 bg-surface-container border-r border-surface-container-highest transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} sm:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col font-body`}
+      onClick={(e) => {
+        if (!(e.target as HTMLElement).closest?.('.group\\/chat')) {
+          setSelectedUser(null);
+        }
+      }}
+    >
       <div className='p-6 border-b border-surface-container-highest'>
         <div className='sm:hidden flex justify-end mb-0'>
           <button onClick={() => setSidebarOpen(false)} className='p-2 hover:bg-surface-container-highest rounded-lg transition-colors cursor-pointer'>
@@ -141,7 +168,7 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selecte
         </div>
       </div>
 
-      <div className='flex-1 overflow-hidden px-4 py-2 flex flex-col'>
+      <div className='flex-1 overflow-hidden px-4 py-2 flex flex-col' onClick={() => setSelectedUser(null)}>
         {
           activeView === 'add-friend' ? <div className='flex flex-col h-full'>
             <div className='flex p-1 bg-surface-container-highest rounded-lg mt-2 mb-4'>
@@ -224,11 +251,18 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selecte
                 const isSelected = selectedUser === chat.chat._id;
                 const isSentByMe = latestMessage?.sender === loggedInUser?._id;
                 const unseenCount = chat.chat.unseenCount || 0
+                const isUserOnline = chat.user?._id && onlineUsers.includes(chat.user._id);
 
-                return <button key={chat.chat._id} onClick={(e) => {
+                return <div key={chat.chat._id} role="button" tabIndex={0} onClick={(e) => {
                   e.stopPropagation();
                   setSelectedUser(chat.chat._id);
                   setSidebarOpen(false);
+                }} onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.stopPropagation();
+                    setSelectedUser(chat.chat._id);
+                    setSidebarOpen(false);
+                  }
                 }} className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer group/chat relative ${isSelected ? "bg-primary-container/30 border border-primary/20 shadow-[0_4px_12px_rgba(106,28,246,0.05)]" : "border-transparent hover:bg-surface-container-high"}`}>
                   <div className='flex items-center gap-3.5'>
                     <div className='relative'>
@@ -237,6 +271,16 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selecte
                           chat.user?.profilePic ? <img src={chat.user.profilePic} alt={chat.user.name} className='w-full h-full object-cover' /> : <span>{(chat.user?.name && chat.user.name.length > 0) ? `${chat.user.name.charAt(0).toUpperCase()}${chat.user.name.charAt(chat.user.name.length - 1).toUpperCase()}` : ''}</span>
                         }
                       </div>
+                      {isUserOnline ? (
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-surface"></div>
+                      ) : (
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-outline rounded-full border-2 border-surface flex items-center justify-center opacity-80">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="4" height="4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="text-surface">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
+                        </div>
+                      )}
                     </div>
                     <div className='flex-1 min-w-0 pr-6'>
                       <div className='flex items-center justify-between mb-0.5'>
@@ -244,34 +288,75 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selecte
                           {chat.user.name}
                         </span>
                         {unseenCount > 0 &&
-                          <div className="bg-primary text-on-primary text-[10px] font-bold rounded-full min-w-5 h-5 flex items-center justify-center px-1.5 ml-2 shadow-sm">
+                          <div className="bg-primary text-on-primary text-[10px] font-bold rounded-full min-w-5 h-5 flex items-center justify-center px-1.5 shadow-sm shrink-0">
                             {unseenCount > 99 ? "99+" : unseenCount}
                           </div>
                         }
                       </div>
                       {
-                        latestMessage && (
-                          <div className='flex items-center gap-1.5'>
-                            {isSentByMe ? <CornerUpLeft size={14} className='text-primary shrink-0 opacity-80' /> : <CornerDownRight size={14} className='text-secondary shrink-0 opacity-80' />}
-                            <span className={`text-[13px] flex-1 truncate ${isSelected ? "text-on-surface-variant" : "text-outline"}`}>
-                              {latestMessage.text}
-                            </span>
+                        typingUsers.includes(chat.user._id) ? (
+                          <div className='flex items-center justify-between gap-2 min-w-0'>
+                            <div className='flex items-center gap-1.5'>
+                              <span className="text-[13px] flex-1 truncate text-primary font-semibold italic flex items-center gap-1">
+                                <span className="flex items-center gap-0.5 ml-0.5">
+                                  typing...
+                                </span>
+                              </span>
+                            </div>
+                            {latestMessage?.createdAt && (
+                              <span className={`text-[11px] ${unseenCount > 0 ? "text-primary font-semibold" : (isSelected ? "text-on-surface-variant/90" : "text-outline")} shrink-0`}>
+                                {formatMessageTime(latestMessage.createdAt)}
+                              </span>
+                            )}
                           </div>
+                        ) : (
+                          latestMessage?.sender && (latestMessage?.text || latestMessage?.deletedForEveryone) && (
+                            <div className='flex items-center justify-between gap-2 min-w-0'>
+                              <div className='flex items-center gap-1.5 min-w-0'>
+                                {isSentByMe ? <CornerUpLeft size={14} className='text-primary shrink-0 opacity-80' /> : <CornerDownRight size={14} className='text-secondary shrink-0 opacity-80' />}
+                                {latestMessage.deletedForEveryone ? (
+                                  <span className={`text-[13px] flex-1 truncate ${isSelected ? "text-on-surface-variant" : "text-outline"}`}>
+                                    <i className="opacity-70">This message was deleted</i>
+                                  </span>
+                                ) : latestMessage.text?.startsWith("📄 ") && latestMessage.text.lastIndexOf('.') > 2 ? (
+                                  <div className={`flex items-center min-w-0 flex-1 text-[13px] ${isSelected ? "text-on-surface-variant" : "text-outline"}`}>
+                                    <FileText size={14} className="mr-1 shrink-0" />
+                                    <span className="truncate">{latestMessage.text.slice(latestMessage.text.indexOf(" ") + 1, latestMessage.text.lastIndexOf('.'))}</span>
+                                    <span className="shrink-0">{latestMessage.text.slice(latestMessage.text.lastIndexOf('.'))}</span>
+                                  </div>
+                                ) : latestMessage.text === "📷 Image" ? (
+                                  <div className={`flex items-center min-w-0 flex-1 text-[13px] ${isSelected ? "text-on-surface-variant" : "text-outline"}`}>
+                                    <ImageIcon size={14} className="mr-1 shrink-0" />
+                                    <span>Image</span>
+                                  </div>
+                                ) : (
+                                  <span className={`text-[13px] flex-1 truncate ${isSelected ? "text-on-surface-variant" : "text-outline"}`}>
+                                    {latestMessage.text}
+                                  </span>
+                                )}
+                              </div>
+                              {latestMessage?.createdAt && (
+                                <span className={`text-[11px] ${unseenCount > 0 ? "text-primary font-semibold" : (isSelected ? "text-on-surface-variant/90" : "text-outline")} shrink-0`}>
+                                  {formatMessageTime(latestMessage.createdAt)}
+                                </span>
+                              )}
+                            </div>
+                          )
                         )
                       }
                     </div>
                   </div>
-                  
+
                   <div className="absolute right-0 top-0 bottom-0 w-24 bg-surface-container-highest/40 backdrop-blur-[3px] opacity-0 group-hover/chat:opacity-100 transition-all rounded-r-xl pointer-events-none z-10 [mask-image:linear-gradient(to_left,black_40%,transparent_100%)]"></div>
-                  
-                  <button 
+
+                  <button
                     onClick={(e) => handleUnfriendClick(e, chat.user._id, chat.chat._id, chat.user.name)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-error/15 backdrop-blur-md text-error hover:bg-error hover:text-on-error rounded-lg opacity-0 group-hover/chat:opacity-100 transition-all shadow-sm z-20 cursor-pointer"
                     title="Unfriend and Delete Chat"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                </button>
+                </div>
               })}
             </div> : <div className='flex flex-col items-center justify-center h-full text-center'>
               <div className='p-5 bg-surface-container-highest rounded-full mb-4 opacity-70'>
@@ -298,7 +383,6 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selecte
         </button>
       </div>
 
-      {/* Unfriend Confirmation Modal */}
       {deleteConfirmation?.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
           <div className="bg-surface-container rounded-3xl p-7 max-w-sm w-[90%] shadow-2xl border border-surface-container-highest animate-in zoom-in-95 duration-200">
@@ -310,14 +394,14 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selecte
               This action is permanent. You will instantly erase your entire chat history and sever your connection across all devices.
             </p>
             <div className="flex items-center justify-end gap-3">
-              <button 
+              <button
                 onClick={() => setDeleteConfirmation(null)}
                 className="px-5 py-2.5 rounded-xl text-sm font-bold text-on-surface hover:bg-surface-container-highest transition-colors cursor-pointer"
                 disabled={isLoading}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={() => executeUnfriend(deleteConfirmation.otherUserId, deleteConfirmation.chatRoomId)}
                 className="px-5 py-2.5 rounded-xl text-sm font-bold bg-error text-on-error hover:scale-[1.02] active:scale-95 transition-all shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isLoading}

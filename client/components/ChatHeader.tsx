@@ -43,9 +43,6 @@ const ChatHeader = ({ user, setSidebarOpen, isTyping, isOnline = true }: ChatHea
 
                         <div className='flex flex-col'>
                             <h2 className='text-lg font-bold text-on-surface leading-tight'>{user.name}</h2>
-                            {isTyping && (
-                                <span className='text-xs text-primary font-medium animate-pulse'>typing...</span>
-                            )}
                         </div>
                     </>
                 ) : (

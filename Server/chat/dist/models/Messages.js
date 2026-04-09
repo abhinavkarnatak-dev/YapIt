@@ -16,9 +16,15 @@ const schema = new Schema({
         publicId: String,
         url: String
     },
+    document: {
+        url: String,
+        originalName: String,
+        size: Number,
+        format: String
+    },
     messageType: {
         type: String,
-        enum: ["text", "image"],
+        enum: ["text", "image", "document"],
         default: "text",
     },
     seen: {
@@ -36,6 +42,21 @@ const schema = new Schema({
     deletedForEveryone: {
         type: Boolean,
         default: false
-    }
+    },
+    linkPreview: {
+        title: String,
+        description: String,
+        image: { url: String },
+        logo: { url: String },
+        publisher: String
+    },
+    isEdited: {
+        type: Boolean,
+        default: false
+    },
+    editHistory: [{
+            text: String,
+            editedAt: Date
+        }]
 }, { timestamps: true });
 export const Messages = mongoose.model("Message", schema);

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Save, Upload, Camera, Loader2, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, Save, Upload, Camera, Loader2, User as UserIcon, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
@@ -9,9 +9,13 @@ import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { useAppData, user_service } from '@/context/AppContext';
 import Loading from '@/components/Loading';
+import { useSocket } from '@/context/SocketContext';
+import Cropper from 'react-easy-crop';
+import getCroppedImg from '@/utils/cropImage';
 
 const ProfilePage = () => {
     const { user, isAuth, userLoading, setUser, setIsAuth } = useAppData();
+    const { socket } = useSocket();
     const router = useRouter();
 
     const [name, setName] = useState('');
@@ -19,6 +23,11 @@ const ProfilePage = () => {
 
     const [picLoading, setPicLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [cropState, setCropState] = useState({ crop: { x: 0, y: 0 }, zoom: 1, aspect: 1 });
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+    const [imageSelector, setImageSelector] = useState<{ url: string, filename: string } | null>(null);
+    const [isCropping, setIsCropping] = useState(false);
 
     useEffect(() => {
         if (!isAuth && !userLoading) {
@@ -55,6 +64,14 @@ const ProfilePage = () => {
             Cookies.set("token", data.token, { expires: 15, secure: false, path: '/' });
             setUser(data.user);
             toast.success(data.message || "Name updated successfully");
+            
+            if (socket) {
+                socket.emit("profile_updated", { 
+                    userId: data.user._id, 
+                    name: data.user.name, 
+                    profilePic: data.user.profilePic 
+                });
+            }
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to update name");
         } finally {
@@ -62,7 +79,7 @@ const ProfilePage = () => {
         }
     };
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -76,11 +93,30 @@ const ProfilePage = () => {
             return;
         }
 
+        setImageSelector({ url: URL.createObjectURL(file), filename: file.name });
+        setIsCropping(true);
+        
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
+
+    const onCropComplete = (croppedArea: any, croppedPixels: any) => {
+        setCroppedAreaPixels(croppedPixels);
+    };
+
+    const submitCroppedImage = async () => {
+        if (!imageSelector || !croppedAreaPixels) return;
+
         setPicLoading(true);
+        setIsCropping(false);
+        
         try {
+            const croppedBlob = await getCroppedImg(imageSelector.url, croppedAreaPixels, imageSelector.filename);
+            
             const token = Cookies.get("token");
             const formData = new FormData();
-            formData.append("profilePic", file);
+            formData.append("profilePic", croppedBlob);
 
             const { data } = await axios.put(`${user_service}/api/v1/user/update/profile-pic`, formData, {
                 headers: {
@@ -92,14 +128,27 @@ const ProfilePage = () => {
             Cookies.set("token", data.token, { expires: 15, secure: false, path: '/' });
             setUser(data.user);
             toast.success(data.message || "Profile picture updated");
+            
+            if (socket) {
+                socket.emit("profile_updated", { 
+                    userId: data.user._id, 
+                    name: data.user.name, 
+                    profilePic: data.user.profilePic 
+                });
+            }
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to upload image");
         } finally {
             setPicLoading(false);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
+            URL.revokeObjectURL(imageSelector.url);
+            setImageSelector(null);
         }
+    };
+
+    const cancelCrop = () => {
+        setIsCropping(false);
+        if (imageSelector) URL.revokeObjectURL(imageSelector.url);
+        setImageSelector(null);
     };
 
     const triggerFileInput = () => {
@@ -108,6 +157,35 @@ const ProfilePage = () => {
 
     return (
         <div className="bg-surface text-on-surface min-h-screen flex flex-col font-body">
+            
+            {isCropping && imageSelector && (
+                <div className="fixed inset-0 z-50 bg-black/95 flex flex-col animate-in fade-in">
+                    <div className="flex-1 relative">
+                        <Cropper
+                          image={imageSelector.url}
+                          crop={cropState.crop}
+                          zoom={cropState.zoom}
+                          aspect={cropState.aspect}
+                          cropShape="rect"
+                          onCropChange={(crop) => setCropState(p => ({ ...p, crop }))}
+                          onCropComplete={onCropComplete}
+                          onZoomChange={(zoom) => setCropState(p => ({ ...p, zoom }))}
+                        />
+                    </div>
+                    <div className="p-6 bg-surface-container flex flex-col items-center gap-5 border-t border-surface-container-highest">
+                        <p className="text-on-surface-variant text-sm font-semibold">Drag to position. Pinch or scroll to zoom.</p>
+                        <div className="flex justify-center gap-4 w-full max-w-sm">
+                            <button onClick={cancelCrop} className="flex-1 py-3.5 rounded-xl font-bold text-on-surface bg-surface-container-highest hover:bg-surface-variant transition-colors cursor-pointer text-center">
+                                Cancel
+                            </button>
+                            <button onClick={submitCroppedImage} className="flex-1 py-3.5 rounded-xl font-bold text-on-primary bg-primary shadow-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                <Check className="w-5 h-5" /> Crop & Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <header className="px-6 py-4 border-b border-surface-container-highest flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Link href="/chat" className="flex items-center gap-2 px-4 py-2 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant rounded-full text-sm font-semibold transition-colors text-on-surface cursor-pointer">
@@ -129,7 +207,7 @@ const ProfilePage = () => {
 
                         <div className="flex flex-col sm:flex-row items-center gap-8">
                             <div className="relative group cursor-pointer" onClick={triggerFileInput}>
-                                <div className={`w-32 h-32 rounded-full overflow-hidden border-4 border-surface-container flex items-center justify-center bg-surface-variant ${picLoading ? 'opacity-50' : ''}`}>
+                                <div className={`w-36 h-36 rounded-full overflow-hidden border-[6px] border-surface-container flex items-center justify-center bg-surface-variant shadow-md ${picLoading ? 'opacity-50' : ''}`}>
                                     {user.profilePic ? (
                                         <img src={user.profilePic} alt={user.name} className="w-full h-full object-cover" />
                                     ) : (
@@ -151,7 +229,7 @@ const ProfilePage = () => {
                                     </div>
                                 )}
 
-                                <button className="absolute bottom-0 right-0 p-2 bg-primary text-on-primary rounded-full shadow-md hover:bg-primary-block transition-colors">
+                                <button className="absolute bottom-1 right-1 p-2 bg-primary text-on-primary rounded-full shadow-lg hover:bg-primary-block transition-colors">
                                     <Camera className="w-4 h-4" />
                                 </button>
                                 <input
@@ -164,8 +242,8 @@ const ProfilePage = () => {
                             </div>
 
                             <div className="flex-1 text-center sm:text-left">
-                                <p className="text-on-surface font-semibold mb-1">Avatar Details</p>
-                                <p className="text-sm text-on-surface-variant">Hover and click the image to upload a new profile picture. Supported formats: JPEG, PNG, or WebP. Max 5MB.</p>
+                                <p className="text-on-surface font-semibold mb-1 text-lg">Avatar Details</p>
+                                <p className="text-sm text-on-surface-variant leading-relaxed">Hover and click the image to upload a new profile picture. Supported formats: JPEG, PNG, or WebP. Max 5MB.</p>
                             </div>
                         </div>
                     </div>
@@ -184,7 +262,7 @@ const ProfilePage = () => {
                                     id="name"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                                    className="w-full px-5 py-3.5 bg-surface-container border border-outline-variant rounded-xl text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-base"
                                     placeholder="Your Name"
                                     required
                                 />
@@ -194,7 +272,7 @@ const ProfilePage = () => {
                                 <input
                                     type="email"
                                     value={user.email}
-                                    className="w-full px-4 py-3 bg-surface-container-highest border-none rounded-xl text-on-surface-variant cursor-not-allowed opacity-70"
+                                    className="w-full px-5 py-3.5 bg-surface-container-highest border-none rounded-xl text-on-surface-variant cursor-not-allowed opacity-70 text-base"
                                     disabled
                                 />
                             </div>
@@ -203,7 +281,7 @@ const ProfilePage = () => {
                                 <button
                                     type="submit"
                                     disabled={nameLoading || name === user.name || !name.trim()}
-                                    className="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-full shadow-md hover:bg-primary-block hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                                    className="flex items-center gap-2 px-8 py-3.5 bg-primary text-on-primary font-bold rounded-full shadow-md hover:bg-primary-block hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
                                 >
                                     {nameLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                                     Save Changes
