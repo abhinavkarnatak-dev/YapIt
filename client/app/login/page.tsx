@@ -42,7 +42,7 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="bg-surface text-on-surface h-screen flex flex-col">
+    <div className="bg-surface text-on-surface h-[100dvh] lg:h-screen flex flex-col">
       <AuthHeader />
 
       <main className="flex-grow flex items-center justify-center px-6 py-12 lg:py-20 relative overflow-hidden">
@@ -84,19 +84,19 @@ const LoginPage = () => {
               <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-primary-container"></div>
 
               <div className="space-y-2 text-center lg:text-left">
-                <h2 className="text-3xl font-bold text-on-surface tracking-tight font-headline">Welcome back</h2>
-                <p className="text-on-surface-variant">Sign in to access your chats</p>
+                <h2 className="text-2xl md:text-3xl font-bold text-on-surface tracking-tight font-headline">Welcome back</h2>
+                <p className="text-sm md:text-base text-on-surface-variant">Sign in to access your chats</p>
               </div>
 
               <form className="space-y-6" onSubmit={handleLogin}>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-on-surface px-1" htmlFor="email">Email Address</label>
+                  <label className="text-xs md:text-sm font-semibold text-on-surface px-1" htmlFor="email">Email Address</label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Mail className="w-5 h-5 text-outline group-focus-within:text-primary transition-colors" />
+                      <Mail className="w-4 h-4 md:w-5 md:h-5 text-outline group-focus-within:text-primary transition-colors" />
                     </div>
                     <input
-                      className="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-full text-on-surface placeholder:text-outline-variant focus:ring-2 focus:ring-primary-fixed-dim/30 focus:bg-surface-bright transition-all duration-300"
+                      className="w-full pl-10 md:pl-12 pr-4 py-3.5 md:py-4 bg-surface-container-low border-none rounded-full text-sm md:text-base text-on-surface placeholder:text-outline-variant focus:ring-2 focus:ring-primary-fixed-dim/30 focus:bg-surface-bright transition-all duration-300"
                       id="email"
                       name="email"
                       placeholder="Your Email"
@@ -108,12 +108,12 @@ const LoginPage = () => {
                   </div>
                 </div>
                 <div className="pt-4">
-                  <button className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-full shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer" type="submit" disabled={loading}>
+                  <button className="w-full py-3.5 md:py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold text-sm md:text-base rounded-full shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer" type="submit" disabled={loading}>
                     {loading ? (<>
-                      <span>Sending OTP</span><Loader2 className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      <span>Sending OTP</span><Loader2 className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
                     </>
                     ) : (<>
-                      <span>Login to YapIt</span><ArrowRight className="w-5 h-5" />
+                      <span>Login to YapIt</span><ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
                     </>
                     )}
 

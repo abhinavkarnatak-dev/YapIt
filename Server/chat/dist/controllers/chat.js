@@ -22,7 +22,52 @@ export const createNewChat = TryCatch(async (req, res) => {
     const newChat = await Chat.create({
         users: [userId, otherUserId]
     });
+    const receiverSocketId = getReceiverSocketId(otherUserId.toString());
+    if (receiverSocketId) {
+        io.to(receiverSocketId).emit("chat_created", { chatId: newChat._id });
+    }
+    const senderSocketId = getReceiverSocketId(userId?.toString() || "");
+    if (senderSocketId) {
+        io.to(senderSocketId).emit("chat_created", { chatId: newChat._id });
+    }
     res.status(200).json({ message: "New chat created", chatId: newChat._id });
+});
+export const createSystemWelcomeChat = TryCatch(async (req, res) => {
+    const { newUserId, systemUserId } = req.body;
+    if (!newUserId || !systemUserId) {
+        res.status(400).json({ message: "Missing required fields" });
+        return;
+    }
+    const newChat = await Chat.create({
+        users: [newUserId, systemUserId]
+    });
+    const savedMessage = await Messages.create({
+        chatId: newChat._id,
+        sender: systemUserId,
+        text: "Welcome aboard! 👋 Your secure space is ready. Set up your profile and start yapping right away!",
+        messageType: "text"
+    });
+    await Chat.findByIdAndUpdate(newChat._id, { updatedAt: Date.now() });
+    // Since it's a brand new user who just signed up, they might not be connected to the socket yet.
+    // However, if they are, emit the event!
+    const receiverSocketId = getReceiverSocketId(newUserId.toString());
+    if (receiverSocketId) {
+        io.to(receiverSocketId).emit("chat_created", { chatId: newChat._id });
+        io.to(receiverSocketId).emit("new_message", savedMessage);
+    }
+    res.status(200).json({ success: true });
+});
+export const triggerConnectionReqEvent = TryCatch(async (req, res) => {
+    const { receiverId } = req.body;
+    if (!receiverId) {
+        res.status(400).json({ message: "Receiver ID required" });
+        return;
+    }
+    const receiverSocketId = getReceiverSocketId(receiverId.toString());
+    if (receiverSocketId) {
+        io.to(receiverSocketId).emit("connection_request", { from: req.user?._id });
+    }
+    res.status(200).json({ success: true });
 });
 export const getAllChats = TryCatch(async (req, res) => {
     const userId = req.user?._id;
@@ -42,7 +87,6 @@ export const getAllChats = TryCatch(async (req, res) => {
             deletedBy: { $ne: userId.toString() },
             deletedForEveryone: false
         });
-        // Dynamically rip the genuine latest message specifically for THIS user's viewpoint
         const latestMsg = await Messages.findOne({
             chatId: chat._id,
             deletedBy: { $ne: userId.toString() }
@@ -174,6 +218,7 @@ export const sendMessage = TryCatch(async (req, res) => {
         messageType: imageUrl ? "image" : documentData ? "document" : "text",
         linkPreview,
     });
+    await Chat.findByIdAndUpdate(chatId, { updatedAt: Date.now() });
     const receiverSocketId = getReceiverSocketId(otherUserId.toString());
     if (receiverSocketId) {
         io.to(receiverSocketId).emit("new_message", savedMessage);
@@ -220,7 +265,6 @@ export const getMessagesByChat = TryCatch(async (req, res) => {
             io.to(receiverSocketId).emit("messages_seen", { chatId, seenAt: seenAtTime });
         }
     }
-    // Censor deleted messages for network transit without altering DB
     const censoredMessages = messages.map(msg => {
         if (msg.deletedForEveryone) {
             const tempObj = msg.toObject();
@@ -262,14 +306,18 @@ export const deleteChat = TryCatch(async (req, res) => {
         res.status(404).json({ message: "Chat not found" });
         return;
     }
-    // Delete all messages referencing the chat
     await Messages.deleteMany({ chatId: chat._id });
+    await Chat.deleteOne({ _id: chat._id });
+    const receiverSocketId = getReceiverSocketId(otherUserId.toString());
+    if (receiverSocketId) {
+        io.to(receiverSocketId).emit("chat_deleted", { chatId: chat._id.toString() });
+    }
     res.status(200).json({ message: "Chat deleted successfully" });
 });
 export const deleteMessage = TryCatch(async (req, res) => {
     const userId = req.user?._id;
     const { messageId } = req.params;
-    const { type } = req.body; // "everyone" or "me"
+    const { type } = req.body;
     if (!userId) {
         res.status(401).json({ message: "Unauthorized" });
         return;
@@ -417,7 +465,6 @@ export const editMessage = TryCatch(async (req, res) => {
     // @ts-ignore - editHistory is recognized via mongoose model schema
     message.text = text;
     message.isEdited = true;
-    // Redo linkPreview if needed
     let linkPreview = undefined;
     const urls = text.match(/(https?:\/\/[^\s]+|www\.[^\s]+)/g);
     if (urls && urls.length > 0) {

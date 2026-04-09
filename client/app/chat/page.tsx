@@ -47,7 +47,7 @@ export interface Message {
 }
 
 const ChatPage = () => {
-  const { isAuth, userLoading, logoutUser, chats, user: loggedInUser, fetchChats, setChats } = useAppData();
+  const { isAuth, userLoading, logoutUser, chats, user: loggedInUser, fetchChats, setChats, fetchIncomingReqs } = useAppData();
   const { socket, onlineUsers } = useSocket();
 
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
@@ -279,6 +279,21 @@ const ChatPage = () => {
       fetchChats();
     });
 
+    socket.on("chat_deleted", (data: { chatId: string }) => {
+      fetchChats();
+      if (selectedUser === data.chatId) {
+        setSelectedUser(null);
+      }
+    });
+
+    socket.on("chat_created", () => {
+      fetchChats();
+    });
+
+    socket.on("connection_request", () => {
+      fetchIncomingReqs();
+    });
+
     socket.on("messages_seen", ({ chatId, seenAt }) => {
       if (selectedUser === chatId) {
         setMessages(prev => {
@@ -314,8 +329,11 @@ const ChatPage = () => {
       socket.off("user_profile_updated");
       socket.off("message_deleted");
       socket.off("message_edited");
+      socket.off("chat_deleted");
+      socket.off("chat_created");
+      socket.off("connection_request");
     };
-  }, [socket, selectedUser, activeChatUserId, fetchChats]);
+  }, [socket, selectedUser, activeChatUserId, fetchChats, fetchIncomingReqs]);
 
   useEffect(() => {
     if (selectedUser) {
@@ -325,7 +343,7 @@ const ChatPage = () => {
 
   if (internalLoading || !isAuth) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-surface font-body">
+      <div className="h-[100dvh] lg:h-screen w-full flex flex-col items-center justify-center bg-surface font-body">
         <div className="flex flex-col items-center justify-center gap-8 animate-in fade-in duration-500">
           <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center shadow-sm">
             <h1 className="text-5xl font-black italic text-primary drop-shadow-sm">Y!</h1>
@@ -347,7 +365,13 @@ const ChatPage = () => {
   const isOnline = activeChatUserId ? onlineUsers.includes(activeChatUserId) : false;
 
   return (
-    <div className='h-screen flex bg-surface text-on-surface overflow-hidden relative font-body'>
+    <div className='h-[100dvh] lg:h-screen flex bg-surface text-on-surface overflow-hidden relative font-body'>
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-10 bg-black/20 backdrop-blur-sm sm:hidden transition-opacity duration-300" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       <ChatSidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -358,10 +382,11 @@ const ChatPage = () => {
         handleLogout={handleLogout}
         typingUsers={typingUsers}
       />
-      <div className='flex-1 flex flex-col bg-surface relative'>
+      <div className='flex-1 flex flex-col bg-surface relative z-0'>
         <div className='px-6 pt-4'>
           <ChatHeader
             user={activeChat?.user || null}
+            sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
             isTyping={isTyping}
             isOnline={isOnline}
@@ -371,16 +396,16 @@ const ChatPage = () => {
         {!selectedUser ? (
           <div className="flex-1 flex flex-col items-center justify-center relative relative">
             <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none opacity-[0.03]">
-              <div className="w-[40vw] h-[40vw] rounded-full border-[40px] border-primary"></div>
+              <div className="w-80 md:w-96 h-80 md:h-96 rounded-full border-[40px] border-primary"></div>
             </div>
             <button
               onClick={() => { setIsSearchModalOpen(true); setSearchQuery(""); }}
-              className="relative z-10 w-20 h-20 bg-primary text-on-primary rounded-[24px] shadow-[0_10px_25px_-5px_rgba(var(--primary-rgb),0.5)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 animate-in fade-in zoom-in-75 cursor-pointer hover:rotate-90 group"
+              className="relative z-10 w-16 md:w-20 h-16 md:h-20 bg-primary text-on-primary rounded-[24px] shadow-[0_10px_25px_-5px_rgba(var(--primary-rgb),0.5)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 animate-in fade-in zoom-in-75 cursor-pointer hover:rotate-90 group"
               title="Start a new chat"
             >
-              <Plus size={36} className="transition-transform duration-300 group-hover:scale-110" />
+              <Plus className="w-6 md:w-10 h-6 md:h-10 transition-transform duration-300 group-hover:scale-110" />
             </button>
-            <p className="relative z-10 mt-6 text-on-surface-variant font-medium text-lg animate-in fade-in slide-in-from-bottom-4 delay-150">Select a friend to start chatting</p>
+            <p className="relative z-10 mt-6 text-on-surface-variant font-medium text-md md:text-lg animate-in fade-in slide-in-from-bottom-4 delay-150">Start a conversation</p>
           </div>
         ) : (
           <>
@@ -401,6 +426,7 @@ const ChatPage = () => {
               senderId={loggedInUser?._id}
               editingMessageId={editingMessageId}
               setEditingMessageId={setEditingMessageId}
+              isSystemBot={activeChat?.user.email === 'system@yapit.com'}
             />
           </>
         )}
@@ -448,7 +474,7 @@ const ChatPage = () => {
                   <p className="text-on-surface-variant text-sm mt-1">Try a different name</p>
                 </div>
               ) : (
-                chats?.filter(c => c.user.name.toLowerCase().includes(searchQuery.toLowerCase())).map(c => (
+                chats?.filter(c => c.user.email !== 'system@yapit.com' && c.user.name.toLowerCase().includes(searchQuery.toLowerCase())).map(c => (
                   <button
                     key={c.chat._id}
                     onClick={() => { setSelectedUser(c.chat._id); setIsSearchModalOpen(false); }}

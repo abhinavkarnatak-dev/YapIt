@@ -4,6 +4,7 @@ import TryCatch from "../config/TryCatch.js";
 import { User } from "../model/User.js";
 import { redisClient } from "../server.js";
 import { uploadToS3 } from "../config/uploadToS3.js";
+import axios from "axios";
 export const loginUser = TryCatch(async (req, res) => {
     const { name, email } = req.body;
     const userExists = await User.findOne({ email });
@@ -49,10 +50,31 @@ export const verifyUser = TryCatch(async (req, res) => {
     const userName = await redisClient.get(`user:${email}`);
     await redisClient.del(otpKey);
     let user = await User.findOne({ email });
+    let isNewUser = false;
     if (!user) {
         user = await User.create({ name: userName?.toString(), email });
+        isNewUser = true;
     }
     await redisClient.del(`user:${email}`);
+    if (isNewUser) {
+        try {
+            let systemUser = await User.findOne({ email: "system@yapit.com" });
+            if (!systemUser) {
+                systemUser = await User.create({
+                    name: "YapIt Team",
+                    email: "system@yapit.com",
+                    profilePic: ""
+                });
+            }
+            axios.post(`${process.env.CHAT_SERVICE || 'http://localhost:5002'}/api/v1/chat/system-welcome`, {
+                newUserId: user._id,
+                systemUserId: systemUser._id
+            }).catch(e => console.error("Could not trigger system welcome chat:", e.message));
+        }
+        catch (err) {
+            console.error("Error setting up system welcome:", err);
+        }
+    }
     const token = generateToken({ id: user._id, email: user.email });
     return res.status(200).json({
         message: "OTP verified successfully.",

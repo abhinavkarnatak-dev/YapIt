@@ -29,8 +29,60 @@ export const createNewChat = TryCatch(async (req: AuthenticatedRequest, res) => 
         users: [userId, otherUserId]
     });
 
+    const receiverSocketId = getReceiverSocketId(otherUserId.toString());
+    if (receiverSocketId) {
+        io.to(receiverSocketId).emit("chat_created", { chatId: newChat._id });
+    }
+    const senderSocketId = getReceiverSocketId(userId?.toString() || "");
+    if (senderSocketId) {
+        io.to(senderSocketId).emit("chat_created", { chatId: newChat._id });
+    }
+
     res.status(200).json({ message: "New chat created", chatId: newChat._id });
 })
+
+export const createSystemWelcomeChat = TryCatch(async (req, res) => {
+    const { newUserId, systemUserId } = req.body;
+
+    if (!newUserId || !systemUserId) {
+        res.status(400).json({ message: "Missing required fields" });
+        return;
+    }
+
+    const newChat = await Chat.create({ 
+        users: [newUserId, systemUserId] 
+    });
+
+    const savedMessage = await Messages.create({
+        chatId: newChat._id,
+        sender: systemUserId,
+        text: "Welcome aboard! 👋 Your secure space is ready. Set up your profile and start yapping right away!",
+        messageType: "text"
+    });
+
+    await Chat.findByIdAndUpdate(newChat._id, { updatedAt: Date.now() });
+
+    const receiverSocketId = getReceiverSocketId(newUserId.toString());
+    if (receiverSocketId) {
+        io.to(receiverSocketId).emit("chat_created", { chatId: newChat._id });
+        io.to(receiverSocketId).emit("new_message", savedMessage);
+    }
+
+    res.status(200).json({ success: true });
+});
+
+export const triggerConnectionReqEvent = TryCatch(async (req: AuthenticatedRequest, res) => {
+    const { receiverId } = req.body;
+    if (!receiverId) {
+        res.status(400).json({ message: "Receiver ID required" });
+        return;
+    }
+    const receiverSocketId = getReceiverSocketId(receiverId.toString());
+    if (receiverSocketId) {
+        io.to(receiverSocketId).emit("connection_request", { from: req.user?._id });
+    }
+    res.status(200).json({ success: true });
+});
 
 export const getAllChats = TryCatch(async (req: AuthenticatedRequest, res) => {
     const userId = req.user?._id;
@@ -198,6 +250,8 @@ export const sendMessage = TryCatch(async (req: AuthenticatedRequest, res) => {
         linkPreview,
     });
 
+    await Chat.findByIdAndUpdate(chatId, { updatedAt: Date.now() });
+
     const receiverSocketId = getReceiverSocketId(otherUserId.toString());
     if (receiverSocketId) {
         io.to(receiverSocketId).emit("new_message", savedMessage);
@@ -308,6 +362,12 @@ export const deleteChat = TryCatch(async (req: AuthenticatedRequest, res) => {
     }
 
     await Messages.deleteMany({ chatId: chat._id });
+    await Chat.deleteOne({ _id: chat._id });
+    
+    const receiverSocketId = getReceiverSocketId(otherUserId.toString());
+    if (receiverSocketId) {
+        io.to(receiverSocketId).emit("chat_deleted", { chatId: chat._id.toString() });
+    }
     
     res.status(200).json({ message: "Chat deleted successfully" });
 });

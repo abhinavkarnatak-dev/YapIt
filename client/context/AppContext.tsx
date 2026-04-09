@@ -4,8 +4,9 @@ import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import axios from "axios";
 
-export const user_service = "http://localhost:8080";
-export const chat_service = "http://localhost:5002";
+const host = typeof window !== "undefined" ? window.location.hostname : "localhost";
+export const user_service = `http://${host}:8080`;
+export const chat_service = `http://${host}:5002`;
 
 export interface User {
     _id: string;
@@ -99,6 +100,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     async function fetchChats() {
         const token = Cookies.get("token");
+        if (!token) return;
         try {
             const { data } = await axios.get(`${chat_service}/api/v1/chat/all`, {
                 headers: {

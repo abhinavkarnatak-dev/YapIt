@@ -71,6 +71,14 @@ export const sendConnectionRequest = TryCatch(async (req, res) => {
         senderName: req.user?.name,
     };
     await publishToQueue("send-connection-req", message);
+    try {
+        await axios.post(`${process.env.CHAT_SERVICE || 'http://localhost:5002'}/api/v1/chat/trigger-req`, { receiverId: receiver._id }, {
+            headers: { Authorization: req.headers.authorization }
+        });
+    }
+    catch (err) {
+        console.error("Error triggering socket event for connection request", err);
+    }
     return res.status(200).json({ message: "Connection request sent successfully." });
 });
 export const getIncomingRequests = TryCatch(async (req, res) => {
@@ -114,6 +122,19 @@ export const acceptConnectionRequest = TryCatch(async (req, res) => {
     }
     catch (error) {
         console.error("Error creating chat upon request acceptance", error);
+    }
+    try {
+        const senderData = await User.findById(request.sender);
+        if (senderData && req.user) {
+            const message = {
+                to: senderData.email,
+                acceptedByName: req.user.name,
+            };
+            await publishToQueue("send-connection-accepted", message);
+        }
+    }
+    catch (error) {
+        console.error("Error sending acceptance email", error);
     }
     return res.status(200).json({ message: "Request accepted successfully." });
 });

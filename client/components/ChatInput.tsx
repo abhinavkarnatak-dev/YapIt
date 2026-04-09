@@ -12,9 +12,10 @@ interface ChatInputProps {
   senderId?: string;
   editingMessageId?: string | null;
   setEditingMessageId?: (id: string | null) => void;
+  isSystemBot?: boolean;
 }
 
-const ChatInput = ({ message, setMessage, onSendMessage, socket, receiverId, senderId, editingMessageId, setEditingMessageId }: ChatInputProps) => {
+const ChatInput = ({ message, setMessage, onSendMessage, socket, receiverId, senderId, editingMessageId, setEditingMessageId, isSystemBot }: ChatInputProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -147,7 +148,7 @@ const ChatInput = ({ message, setMessage, onSendMessage, socket, receiverId, sen
   }, [socket, receiverId, senderId, isTypingLocal]);
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 p-4 bg-surface/80 backdrop-blur-md border-t border-outline-variant/30 z-20">
+    <div className="absolute bottom-0 left-0 right-0 p-4 bg-surface/80 backdrop-blur-md border-t border-outline-variant/30 z-10">
       {editingMessageId && (
         <div className="mb-3 px-3 py-2 bg-surface-container-highest border border-primary/30 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-bottom-2 mx-2">
           <div className="flex items-center gap-2.5">
@@ -192,8 +193,8 @@ const ChatInput = ({ message, setMessage, onSendMessage, socket, receiverId, sen
         </div>
       )}
 
-      <div className="w-full mx-auto flex items-center gap-3 bg-surface-container-low p-2 rounded-full border border-outline-variant/50 shadow-sm transition-all focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50">
-        {showEmojiPicker && (
+      <div className="w-full mx-auto flex items-center gap-2 bg-surface-container-low p-2 rounded-full border border-outline-variant/50 shadow-sm transition-all focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50">
+        {!isSystemBot && showEmojiPicker && (
           <div ref={emojiPickerRef} className="absolute bottom-[calc(100%+12px)] left-2 z-50 shadow-2xl rounded-2xl overflow-hidden border border-outline-variant/20 animate-in slide-in-from-bottom-2 fade-in">
             <EmojiPicker
               onEmojiClick={onEmojiClick}
@@ -206,21 +207,23 @@ const ChatInput = ({ message, setMessage, onSendMessage, socket, receiverId, sen
           </div>
         )}
 
-        <button
-          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          className={`emoji-toggle-btn p-2 transition-colors rounded-full cursor-pointer ${showEmojiPicker ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-high'}`}
-          title="Add Emoji"
-        >
-          <Smile size={20} />
-        </button>
+        {!isSystemBot && (
+          <button
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className={`emoji-toggle-btn p-2 transition-colors rounded-full cursor-pointer ${showEmojiPicker ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-high'}`}
+            title="Add Emoji"
+          >
+            <Smile className='w-4 h-4' />
+          </button>
+        )}
 
-        {!editingMessageId && (
+        {!isSystemBot && !editingMessageId && (
           <button
             onClick={() => { fileInputRef.current?.click(); setShowEmojiPicker(false); }}
             className="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container-high cursor-pointer"
             title="Attach File"
           >
-            <Paperclip size={20} />
+            <Paperclip className='w-4 h-4' />
           </button>
         )}
 
@@ -230,6 +233,7 @@ const ChatInput = ({ message, setMessage, onSendMessage, socket, receiverId, sen
           ref={fileInputRef}
           onChange={handleFileChange}
           className="hidden"
+          disabled={isSystemBot}
         />
 
         <textarea
@@ -238,19 +242,22 @@ const ChatInput = ({ message, setMessage, onSendMessage, socket, receiverId, sen
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          placeholder="Type a message..."
+          placeholder={isSystemBot ? "Replies are disabled for this conversation" : "Type a message..."}
           rows={1}
           style={{ resize: 'none' }}
-          className="flex-1 bg-transparent border-none outline-none text-on-surface placeholder:text-on-surface-variant/50 text-[15px] px-2 py-0 my-auto scrollbar-thin scrollbar-thumb-outline-variant/30 scrollbar-track-transparent"
+          disabled={isSystemBot}
+          className="flex-1 bg-transparent border-none outline-none text-on-surface placeholder:text-on-surface-variant/50 text-[15px] px-2 py-0 my-auto scrollbar-thin scrollbar-thumb-outline-variant/30 scrollbar-track-transparent disabled:opacity-50 disabled:cursor-not-allowed"
         />
 
-        <button
-          onClick={handleSend}
-          disabled={!message.trim() && !attachmentFile}
-          className="p-2.5 bg-primary text-on-primary rounded-full hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center shadow-sm active:scale-95 cursor-pointer"
-        >
-          <Send size={18} className="translate-x-[1px] translate-y-[1px]" />
-        </button>
+        {!isSystemBot && (
+          <button
+            onClick={handleSend}
+            disabled={!message.trim() && !attachmentFile}
+            className="p-2.5 bg-primary text-on-primary rounded-full hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center shadow-sm active:scale-95 cursor-pointer"
+          >
+            <Send className="w-4 h-4 translate-x-[1px] translate-y-[1px]" />
+          </button>
+        )}
       </div>
     </div>
   );

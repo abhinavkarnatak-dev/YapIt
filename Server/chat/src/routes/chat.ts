@@ -1,11 +1,15 @@
 import express from "express"
-import { createNewChat, getAllChats, getMessagesByChat, sendMessage, deleteChat, deleteMessage, markMessagesAsSeen, downloadDocument, editMessage } from "../controllers/chat.js";
+import { createNewChat, getAllChats, getMessagesByChat, sendMessage, deleteChat, deleteMessage, markMessagesAsSeen, downloadDocument, editMessage, triggerConnectionReqEvent, createSystemWelcomeChat } from "../controllers/chat.js";
 import isAuth from "../middlewares/isAuth.js";
 import { upload } from "../middlewares/multer.js";
 
 const router = express.Router();
 
 router.post("/chat/new", isAuth, createNewChat);
+
+router.post("/chat/system-welcome", createSystemWelcomeChat);
+
+router.post("/chat/trigger-req", isAuth, triggerConnectionReqEvent);
 
 router.get("/chat/all", isAuth, getAllChats);
 
