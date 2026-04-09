@@ -37,7 +37,24 @@ const ChatHeader = ({ user, sidebarOpen, setSidebarOpen, isTyping, isOnline = tr
                                         {user.profilePic ? (
                                             <img src={user.profilePic} alt={user.name} className='w-full h-full object-cover' />
                                         ) : (
-                                            <span className="text-primary font-bold">{user.name ? `${user.name.charAt(0).toUpperCase()}${user.name.charAt(user.name.length - 1).toUpperCase()}` : ''}</span>
+                                            <span>
+                                                {user.name
+                                                    ? (() => {
+                                                        const parts = user.name
+                                                            .trim()
+                                                            .split(/\s+/)
+                                                            .filter(p => /^[A-Za-z]/.test(p));
+
+                                                        const first = parts[0]?.charAt(0).toUpperCase() || "";
+                                                        const last =
+                                                            parts.length > 1
+                                                                ? parts[parts.length - 1].charAt(0).toUpperCase()
+                                                                : "";
+
+                                                        return first + last;
+                                                    })()
+                                                    : ""}
+                                            </span>
                                         )}
                                     </div>
                                     {isOnline ? (
@@ -72,9 +89,9 @@ const ChatHeader = ({ user, sidebarOpen, setSidebarOpen, isTyping, isOnline = tr
                         </div>
                     </div>
                 )}
+            </div>
         </div>
-    </div>
-  )
+    )
 }
 
 export default ChatHeader

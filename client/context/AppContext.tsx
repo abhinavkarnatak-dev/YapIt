@@ -85,7 +85,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 setUserLoading(false);
             }
         } catch (error) {
-            console.error(error);
+            console.error("fetchUser error:", error);
+            Cookies.remove("token");
+            setIsAuth(false);
+            setUser(null);
             setUserLoading(false);
         }
     }
@@ -136,9 +139,17 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     useEffect(() => {
         fetchUser();
-        fetchChats();
-        fetchIncomingReqs();
     }, []);
+
+    useEffect(() => {
+        if (isAuth) {
+            fetchChats();
+            fetchIncomingReqs();
+        } else {
+            setChats(null);
+            setIncomingReqs(null);
+        }
+    }, [isAuth]);
 
     return (
         <AppContext.Provider value={{ user, userLoading, isAuth, setUser, setIsAuth, logoutUser, chats, setChats, fetchChats, incomingReqs, fetchIncomingReqs }}>

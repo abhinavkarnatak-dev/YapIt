@@ -9,15 +9,15 @@ export default function PrivacyPolicy() {
 
       <main className="max-w-3xl mx-auto px-6 py-12 lg:py-20 space-y-12">
         <div className="space-y-4 border-b border-surface-container-high pb-8">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight font-headline text-on-surface">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-headline text-on-surface">
             Privacy Policy
           </h1>
-          <p className="text-on-surface-variant uppercase text-sm font-semibold tracking-wider">
+          <p className="text-on-surface-variant uppercase text-xs md:text-sm font-semibold tracking-wider">
             Effective Date: January 1, 2026
           </p>
         </div>
 
-        <div className="space-y-10 text-on-surface-variant leading-relaxed text-lg">
+        <div className="space-y-10 text-on-surface-variant leading-relaxed text-sm md:text-base">
           <p>
             At YapIt, protecting your privacy is important to us. This Privacy Policy explains
             what information we collect, how we use it, and the choices you have regarding your
@@ -25,15 +25,15 @@ export default function PrivacyPolicy() {
           </p>
 
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-on-surface font-headline">
+            <h2 className="text-xl md:text-2xl font-bold text-on-surface font-headline">
               1. Information We Collect
             </h2>
 
-            <p>
+            <p className='text-sm md:text-base'>
               We collect certain information to provide and maintain the YapIt service.
             </p>
 
-            <ul className="list-disc pl-6 space-y-2">
+            <ul className="list-disc pl-6 space-y-2 text-sm md:text-base">
               <li>
                 <strong className="text-on-surface">Account Information:</strong> When you create
                 an account, we collect your name and email address. Your email address is verified
@@ -61,13 +61,13 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-on-surface font-headline">
+            <h2 className="text-xl md:text-2xl font-bold text-on-surface font-headline">
               2. How We Use Your Information
             </h2>
 
-            <p>We use the information we collect to:</p>
+            <p className='text-sm md:text-base'>We use the information we collect to:</p>
 
-            <ul className="list-disc pl-6 space-y-2">
+            <ul className="list-disc pl-6 space-y-2 text-sm md:text-base">
               <li>Provide and maintain the YapIt messaging service.</li>
               <li>Authenticate users securely through OTP verification.</li>
               <li>Deliver messages, files, and notifications between users.</li>
@@ -77,17 +77,17 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-on-surface font-headline">
+            <h2 className="text-xl md:text-2xl font-bold text-on-surface font-headline">
               3. Information Security
             </h2>
 
-            <p>
+            <p className='text-sm md:text-base'>
               YapIt uses industry-standard security practices to protect your information.
               Communication between your device and our servers is encrypted using HTTPS and
               secure WebSocket connections.
             </p>
 
-            <p>
+            <p className='text-sm md:text-base'>
               While we take strong measures to protect your data, no system can guarantee
               absolute security. Users are responsible for keeping their email accounts and
               authentication credentials secure.
@@ -95,15 +95,15 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-on-surface font-headline">
+            <h2 className="text-xl md:text-2xl font-bold text-on-surface font-headline">
               4. Data Sharing
             </h2>
 
-            <p>
+            <p className='text-sm md:text-base'>
               YapIt does not sell or rent your personal information to third parties.
             </p>
 
-            <p>
+            <p className='text-sm md:text-base'>
               We may work with trusted service providers (such as cloud hosting or storage
               providers) to operate our infrastructure. These providers process data only
               for the purpose of supporting the YapIt service.
@@ -111,49 +111,49 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-on-surface font-headline">
+            <h2 className="text-xl md:text-2xl font-bold text-on-surface font-headline">
               5. Your Privacy Controls
             </h2>
 
-            <p>You have control over your information on YapIt. You may:</p>
+            <p className='text-sm md:text-base'>You have control over your information on YapIt. You may:</p>
 
-            <ul className="list-disc pl-6 space-y-2">
+            <ul className="list-disc pl-6 space-y-2 text-sm md:text-base">
               <li>Update your name or profile picture.</li>
               <li>Delete your account permanently.</li>
             </ul>
 
-            <p>
+            <p className='text-sm md:text-base'>
               We delete your information from active systems and may retain certain data for a limited time where necessary for security, legal, or operational purposes.
             </p>
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-on-surface font-headline">
+            <h2 className="text-xl md:text-2xl font-bold text-on-surface font-headline">
               6. Changes to This Privacy Policy
             </h2>
 
-            <p>
+            <p className='text-sm md:text-base'>
               We may update this Privacy Policy from time to time to reflect improvements
               to the service or legal requirements. When we do, we will update the Effective
               Date at the top of this page.
             </p>
 
-            <p>
+            <p className='text-sm md:text-base'>
               Continued use of YapIt after updates means you agree to the revised policy.
             </p>
           </section>
 
           {/* <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-on-surface font-headline">
+            <h2 className="text-xl md:text-2xl font-bold text-on-surface font-headline">
               7. Contact Us
             </h2>
 
-            <p>
+            <p className='text-sm md:text-base'>
               If you have any questions about this Privacy Policy or how your data is handled,
               please contact us:
             </p>
 
-            <p>Email: support@yapit.com</p>
+            <p className='text-sm md:text-base'>Email: support@yapit.com</p>
           </section> */}
         </div>
       </main>
