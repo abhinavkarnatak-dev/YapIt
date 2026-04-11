@@ -1,0 +1,73 @@
+services:
+  client:
+    image: yapit-client
+    build:
+      context: ./client
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./client/.env
+    networks:
+      - yapit-network
+
+  user-service:
+    image: yapit-user
+    build:
+      context: ./server/user
+    env_file:
+      - ./server/user/.env
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      CHAT_SERVICE: http://chat-service:5002
+    networks:
+      - yapit-network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  chat-service:
+    image: yapit-chat
+    build:
+      context: ./server/chat
+    env_file:
+      - ./server/chat/.env
+    environment:
+      USER_SERVICE: http://user-service:8080
+    networks:
+      - yapit-network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  mail-service:
+    image: yapit-mail
+    build:
+      context: ./server/mail
+    env_file:
+      - ./server/mail/.env
+    environment:
+      RABBITMQ_HOST: rabbitmq
+    networks:
+      - yapit-network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - yapit-network
+
+networks:
+  yapit-network:
+    driver: bridge
