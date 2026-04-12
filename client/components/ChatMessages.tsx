@@ -1,5 +1,5 @@
 import { Message } from '@/app/chat/page';
-import { User, chat_service } from '@/context/AppContext';
+import { User } from '@/context/AppContext';
 import { Trash2, Ban, MoreVertical, CheckCheck, FileText, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
@@ -59,7 +59,7 @@ const ChatMessages = ({ messages, selectedUser, loggedInUser, onDeleteMessage, o
       const token = Cookies.get("token");
       if (!token) throw new Error("No token found");
 
-      const downloadUrl = `${chat_service}/api/v1/message/download/${messageId}?token=${token}`;
+      const downloadUrl = `/api/v1/message/download/${messageId}?token=${token}`;
 
       const link = document.createElement('a');
       link.href = downloadUrl;

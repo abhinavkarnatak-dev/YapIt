@@ -1,4 +1,4 @@
-import { chat_service, useAppData, user_service, User } from '@/context/AppContext';
+import { useAppData, User } from '@/context/AppContext';  
 import { CornerDownRight, CornerUpLeft, LogOut, MessageCircle, Plus, Search, UserCircle, X, Check, Mail, UserPlus, Inbox, Trash2, FileText, Image as ImageIcon, ChevronLeftSquareIcon, ChevronLeft, MenuIcon } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState } from 'react'
@@ -53,7 +53,7 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selecte
     setFoundUser(null);
     try {
       const token = Cookies.get("token");
-      const { data } = await axios.post(`${user_service}/api/v1/user/email`, { email: emailQuery }, {
+      const { data } = await axios.post(`/api/v1/user/email`, { email: emailQuery }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFoundUser(data.user);
@@ -69,7 +69,7 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selecte
     setIsLoading(true);
     try {
       const token = Cookies.get("token");
-      const { data } = await axios.post(`${user_service}/api/v1/user/request/send`, { email: foundUser.email }, {
+      const { data } = await axios.post(`/api/v1/user/request/send`, { email: foundUser.email }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success(data.message);
@@ -86,7 +86,7 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selecte
   const handleAcceptRequest = async (requestId: string) => {
     try {
       const token = Cookies.get("token");
-      const { data } = await axios.post(`${user_service}/api/v1/user/request/accept`, { requestId }, {
+      const { data } = await axios.post(`/api/v1/user/request/accept`, { requestId }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success(data.message);
@@ -101,7 +101,7 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selecte
   const handleRejectRequest = async (requestId: string) => {
     try {
       const token = Cookies.get("token");
-      const { data } = await axios.post(`${user_service}/api/v1/user/request/reject`, { requestId }, {
+      const { data } = await axios.post(`/api/v1/user/request/reject`, { requestId }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success(data.message);
@@ -121,7 +121,7 @@ const ChatSidebar = ({ sidebarOpen, setSidebarOpen, loggedInUser, chats, selecte
     setIsLoading(true);
     try {
       const token = Cookies.get("token");
-      const { data } = await axios.delete(`${user_service}/api/v1/user/unfriend`, {
+      const { data } = await axios.delete(`/api/v1/user/unfriend`, {
         data: { otherUserId },
         headers: { Authorization: `Bearer ${token}` }
       });

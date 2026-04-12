@@ -7,7 +7,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import AuthHeader from '@/components/AuthHeader';
-import { useAppData, user_service } from '@/context/AppContext';
+import { useAppData } from '@/context/AppContext';
 import Loading from './Loading';
 
 const VerifyOtp = () => {
@@ -62,7 +62,7 @@ const VerifyOtp = () => {
     const handleResendOTP = async () => {
         setResendLoading(true);
         try {
-            const { data } = await axios.post(`${user_service}/api/v1/login`, { email });
+            const { data } = await axios.post(`/api/v1/login`, { email });
             toast.success(data.message);
             setTimer(60);
         } catch (error: any) {
@@ -81,7 +81,7 @@ const VerifyOtp = () => {
         }
         setLoading(true);
         try {
-            const { data } = await axios.post(`${user_service}/api/v1/verify`, {
+            const { data } = await axios.post(`/api/v1/verify`, {
                 email, 
                 enteredOtp: otpString
             });

@@ -4,10 +4,6 @@ import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import axios from "axios";
 
-const host = typeof window !== "undefined" ? window.location.hostname : "localhost";
-export const user_service = `http://${host}:8080`;
-export const chat_service = `http://${host}:5002`;
-
 export interface User {
     _id: string;
     name: string;
@@ -74,7 +70,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 setUserLoading(false);
                 return;
             }
-            const { data } = await axios.get(`${user_service}/api/v1/me`, {
+            const { data } = await axios.get(`/api/v1/me`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -105,7 +101,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         const token = Cookies.get("token");
         if (!token) return;
         try {
-            const { data } = await axios.get(`${chat_service}/api/v1/chat/all`, {
+            const { data } = await axios.get(`/api/v1/chat/all`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -124,7 +120,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         const token = Cookies.get("token");
         if (!token) return;
         try {
-            const { data } = await axios.get(`${user_service}/api/v1/user/requests`, {
+            const { data } = await axios.get(`/api/v1/user/requests`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
