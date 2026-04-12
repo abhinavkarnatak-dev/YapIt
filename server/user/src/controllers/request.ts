@@ -86,7 +86,7 @@ export const sendConnectionRequest = TryCatch(async (req: AuthenticatedRequest, 
     await publishToQueue("send-connection-req", message);
 
     try {
-        await axios.post(`/api/v1/chat/trigger-req`, { receiverId: receiver._id }, {
+        await axios.post(`http://chat-service:5002/api/v1/chat/trigger-req`, { receiverId: receiver._id }, {
             headers: { Authorization: req.headers.authorization }
         });
     } catch (err) {
@@ -135,7 +135,7 @@ export const acceptConnectionRequest = TryCatch(async (req: AuthenticatedRequest
     await request.save();
 
     try {
-        await axios.post(`/api/v1/chat/new`, {
+        await axios.post(`http://chat-service:5002/api/v1/chat/new`, {
             userId: userId,
             otherUserId: request.sender
         }, {
@@ -211,7 +211,7 @@ export const unfriendUser = TryCatch(async (req: AuthenticatedRequest, res) => {
     }
 
     try {
-        await axios.delete(`/api/v1/chat/remove/${otherUserId}`, {
+        await axios.delete(`http://chat-service:5002/api/v1/chat/remove/${otherUserId}`, {
             headers: { Authorization: token }
         });
     } catch (error) {

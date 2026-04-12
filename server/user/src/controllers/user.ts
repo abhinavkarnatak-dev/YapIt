@@ -92,7 +92,7 @@ export const verifyUser = TryCatch(async (req, res) => {
                     profilePic: ""
                 });
             }
-            axios.post(`/api/v1/chat/system-welcome`, {
+            axios.post(`http://chat-service:5002/api/v1/chat/system-welcome`, {
                 newUserId: user._id,
                 systemUserId: systemUser._id
             }).catch(e => console.error("Could not trigger system welcome chat:", e.message));
