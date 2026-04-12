@@ -4,7 +4,7 @@ import { Chat } from "../models/Chat.js";
 import { Messages } from "../models/Messages.js";
 import axios from "axios";
 import { uploadToS3 } from "../config/uploadToS3.js";
-import { user_service } from "../config/Services.js";
+// import { user_service } from "../config/Services.js";
 import { io, getReceiverSocketId } from "../socket.js";
 
 export const createNewChat = TryCatch(async (req: AuthenticatedRequest, res) => {
@@ -121,7 +121,7 @@ export const getAllChats = TryCatch(async (req: AuthenticatedRequest, res) => {
             }
 
             try {
-                const { data } = await axios.get<any>(`${user_service}/api/v1/user/${otherUserId}`);
+                const { data } = await axios.get<any>(`/api/v1/user/${otherUserId}`);
 
                 return {
                     user: data?.user,
@@ -326,7 +326,7 @@ export const getMessagesByChat = TryCatch(async (req: AuthenticatedRequest, res)
     });
 
     try {
-        const { data } = await axios.get<any>(`${user_service}/api/v1/user/${otherUserId}`);
+        const { data } = await axios.get<any>(`/api/v1/user/${otherUserId}`);
 
         if (!otherUserId) {
             res.status(404).json({ message: "Other user not found" });
