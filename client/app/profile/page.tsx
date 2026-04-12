@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
-import { useAppData, user_service } from '@/context/AppContext';
+import { useAppData } from '@/context/AppContext';
 import Loading from '@/components/Loading';
 import { useSocket } from '@/context/SocketContext';
 import Cropper from 'react-easy-crop';
@@ -58,7 +58,7 @@ const ProfilePage = () => {
         setNameLoading(true);
         try {
             const token = Cookies.get("token");
-            const { data } = await axios.put(`${user_service}/api/v1/user/update`, { name }, {
+            const { data } = await axios.put(`/api/v1/user/update`, { name }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -119,7 +119,7 @@ const ProfilePage = () => {
             const formData = new FormData();
             formData.append("profilePic", croppedBlob);
 
-            const { data } = await axios.put(`${user_service}/api/v1/user/update/profile-pic`, formData, {
+            const { data } = await axios.put(`/api/v1/user/update/profile-pic`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
@@ -158,7 +158,7 @@ const ProfilePage = () => {
             const token = Cookies.get("token");
             const formData = new FormData();
 
-            const { data } = await axios.put(`${user_service}/api/v1/user/update/profile-pic`, formData, {
+            const { data } = await axios.put(`/api/v1/user/update/profile-pic`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'

@@ -8,7 +8,7 @@ import AuthFooter from '@/components/AuthFooter';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { useAppData, user_service } from '@/context/AppContext';
+import { useAppData } from '@/context/AppContext';
 import Loading from '@/components/Loading';
 const LoginPage = () => {
   const { isAuth, userLoading } = useAppData();
@@ -26,7 +26,7 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await axios.post(`${user_service}/api/v1/login`, { email });
+      const { data } = await axios.post(`/api/v1/login`, { email });
       toast.success(data.message);
       router.push(`/verify?email=${email}`);
     } catch (error: any) {
