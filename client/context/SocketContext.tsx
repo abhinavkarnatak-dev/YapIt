@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import io, { Socket } from "socket.io-client";
-import { useAppData } from "./AppContext";
+import { useAppData, chat_service } from "./AppContext";
 
 interface SocketContextType {
   socket: Socket | null;
@@ -26,7 +26,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (isAuth && user && !userLoading) {
-      const socketInstance = io("/", {
+      const socketInstance = io(chat_service, {
         query: {
           userId: user._id,
         },

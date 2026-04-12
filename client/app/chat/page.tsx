@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react'
-import { useAppData, User } from '@/context/AppContext'
+import { chat_service, useAppData, User } from '@/context/AppContext'
 import Loading from '@/components/Loading'
 import { useRouter } from 'next/navigation';
 import ChatSidebar from '@/components/ChatSidebar';
@@ -112,7 +112,7 @@ const ChatPage = () => {
     }
 
     try {
-      const { data } = await axios.get(`/api/v1/message/${selectedUser}`, {
+      const { data } = await axios.get(`${chat_service}/api/v1/message/${selectedUser}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -137,7 +137,7 @@ const ChatPage = () => {
     const token = Cookies.get("token");
     try {
       if (editingMessageId) {
-        const { data } = await axios.put(`/api/v1/message/edit/${editingMessageId}`, {
+        const { data } = await axios.put(`${chat_service}/api/v1/message/edit/${editingMessageId}`, {
           text: message.trim()
         }, {
           headers: { Authorization: `Bearer ${token}` }
@@ -170,12 +170,12 @@ const ChatPage = () => {
         }
         formData.append("file", imageFile);
 
-        const { data } = await axios.post(`/api/v1/message`, formData, {
+        const { data } = await axios.post(`${chat_service}/api/v1/message`, formData, {
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }
         });
         savedMessageData = data.savedMessage;
       } else {
-        const { data } = await axios.post(`/api/v1/message`, {
+        const { data } = await axios.post(`${chat_service}/api/v1/message`, {
           chatId: selectedUser,
           text: message
         }, {
@@ -205,7 +205,7 @@ const ChatPage = () => {
   const handleDeleteMessage = async (messageId: string, type: "everyone" | "me") => {
     try {
       const token = Cookies.get("token");
-      await axios.delete(`/api/v1/message/${messageId}`, {
+      await axios.delete(`${chat_service}/api/v1/message/${messageId}`, {
         headers: { Authorization: `Bearer ${token}` },
         data: { type }
       });
@@ -244,7 +244,7 @@ const ChatPage = () => {
         }
 
         const token = Cookies.get("token");
-        axios.put(`/api/v1/message/seen/${selectedUser}`, {}, {
+        axios.put(`${chat_service}/api/v1/message/seen/${selectedUser}`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         }).then(() => {
           fetchChats();
