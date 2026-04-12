@@ -405,7 +405,7 @@ const ChatPage = () => {
             >
               <Plus className="w-6 md:w-10 h-6 md:h-10 transition-transform duration-300 group-hover:scale-110" />
             </button>
-            <p className="relative z-10 mt-6 text-on-surface-variant font-medium text-md md:text-lg animate-in fade-in slide-in-from-bottom-4 delay-150">Start a good conversation</p>
+            <p className="relative z-10 mt-6 text-on-surface-variant font-medium text-md md:text-lg animate-in fade-in slide-in-from-bottom-4 delay-150">Start a conversation</p>
           </div>
         ) : (
           <>
