@@ -37,7 +37,7 @@ export const startSendingOTPConsumer = async (retries = 5, delay = 5000) => {
                             html: `<div style="font-family:sans-serif;">
                                         <h2>Verify your email</h2>
                                         <p>Your OTP for verifying your account on <b>YapIt</b> is:</p>
-                                        <h3 style="color:#66547d;">${otp}</h3>
+                                        <h3 style="color:#4f46e5;">${otp}</h3>
                                         <p>This OTP is valid for 5 minutes. If you didn't request this, please ignore.</p>
                                     </div>`,
                         });
@@ -90,7 +90,7 @@ export const startConnectionRequestConsumer = async (retries = 5, delay = 5000) 
                             subject: "New Connection Request on YapIt",
                             html: `<div style="font-family:sans-serif;">
                                     <h2>You have received a connection request!</h2>
-                                    <p><b style="color:#66547d;">${senderName || 'Someone'}</b> wants to connect with you on <b>YapIt</b>.</p>
+                                    <p><b style="color:#4f46e5;">${senderName || 'Someone'}</b> wants to connect with you on <b>YapIt</b>.</p>
                                     <p>To accept the request and start chatting, please open the YapIt app.</p>
                                 </div>`,
                         });
@@ -143,7 +143,7 @@ export const startConnectionAcceptedConsumer = async (retries = 5, delay = 5000)
                             subject: "Connection Request Accepted!",
                             html: `<div style="font-family:sans-serif;">
                                         <h2>You have a new connection!</h2>
-                                        <p><b style="color:#66547d;">${acceptedByName || 'Someone'}</b> has accepted your connection request on <b>YapIt</b>.</p>
+                                        <p><b style="color:#4f46e5;">${acceptedByName || 'Someone'}</b> has accepted your connection request on <b>YapIt</b>.</p>
                                         <p>You can now start chatting with them in the app.</p>
                                     </div>`,
                         });

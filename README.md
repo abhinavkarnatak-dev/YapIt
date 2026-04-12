@@ -1,7 +1,5 @@
 # 💬 YapIt | Real-Time Messaging Platform
 
-![YapIt Banner](https://via.placeholder.com/1200x400/6366f1/ffffff?text=YapIt+-+Secure+Real-Time+Messaging)
-
 > A modern, robust, and dynamically scalable real-time chat application built using a microservices architecture. 
 
 YapIt is designed to offer a seamless messaging experience with secure OTP-based authentication, real-time socket connections, robust file sharing, and granular message controls. Engineered with Next.js on the frontend and distributed Node.js microservices on the backend, fully containerized with Docker.
