@@ -1,6 +1,7 @@
 services:
   client:
     image: yapit-client
+    restart: unless-stopped
     build:
       context: ./client
     ports:
@@ -12,6 +13,7 @@ services:
 
   user-service:
     image: yapit-user
+    restart: unless-stopped
     build:
       context: ./server/user
     env_file:
@@ -27,6 +29,7 @@ services:
 
   chat-service:
     image: yapit-chat
+    restart: unless-stopped
     build:
       context: ./server/chat
     env_file:
@@ -41,6 +44,7 @@ services:
 
   mail-service:
     image: yapit-mail
+    restart: unless-stopped
     build:
       context: ./server/mail
     env_file:

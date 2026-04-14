@@ -16,11 +16,18 @@ export const redisClient = createClient({
   url: process.env.REDIS_URL,
 });
 
-redisClient.connect().then(() => {
-  console.log("Connected to Redis");
-}).catch((err) => {
-  console.log("Redis Client Error", err);
+redisClient.on("error", (err) => {
+  console.error("Redis Error:", err);
 });
+
+(async () => {
+  try {
+    await redisClient.connect();
+    console.log("Connected to Redis");
+  } catch (err) {
+    console.log("Redis not connected, continuing without Redis...");
+  }
+})();
 
 const app = express();
 
