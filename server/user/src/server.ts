@@ -14,6 +14,7 @@ connectRabbitMQ()
 
 export const redisClient = createClient({
   url: process.env.REDIS_URL,
+  pingInterval: 1000 * 60 * 4,
 });
 
 redisClient.on("error", (err) => {
