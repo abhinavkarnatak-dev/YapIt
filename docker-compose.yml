@@ -1,7 +1,7 @@
 services:
   client:
     image: yapit-client
-    restart: unless-stopped
+    restart: always
     build:
       context: ./client
     ports:
@@ -13,7 +13,7 @@ services:
 
   user-service:
     image: yapit-user
-    restart: unless-stopped
+    restart: always
     build:
       context: ./server/user
     env_file:
@@ -29,7 +29,7 @@ services:
 
   chat-service:
     image: yapit-chat
-    restart: unless-stopped
+    restart: always
     build:
       context: ./server/chat
     env_file:
@@ -44,7 +44,7 @@ services:
 
   mail-service:
     image: yapit-mail
-    restart: unless-stopped
+    restart: always
     build:
       context: ./server/mail
     env_file:
@@ -59,7 +59,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
-    restart: unless-stopped
+    restart: always
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin123
