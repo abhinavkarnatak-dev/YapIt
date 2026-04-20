@@ -34,6 +34,8 @@ services:
     restart: always
     build:
       context: ./server/chat
+    ports:
+      - "5002:5002"
     env_file:
       - ./server/chat/.env
     environment:
