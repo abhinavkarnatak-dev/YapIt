@@ -20,5 +20,6 @@ jobs:
             cd YapIt
             git stash
             git pull origin main
+            docker system prune -f
             docker-compose down
             docker-compose up -d --build

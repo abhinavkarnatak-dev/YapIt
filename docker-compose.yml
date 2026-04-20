@@ -16,6 +16,8 @@ services:
     restart: always
     build:
       context: ./server/user
+    ports:
+      - "8080:8080"
     env_file:
       - ./server/user/.env
     environment:
