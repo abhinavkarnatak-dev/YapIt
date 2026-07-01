@@ -84,8 +84,8 @@ jobs:
 
             export DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME
 
-            docker-compose pull
+            docker compose pull
 
-            docker-compose up -d --remove-orphans
+            docker compose up -d --remove-orphans
 
             docker image prune -af
