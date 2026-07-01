@@ -27,6 +27,8 @@ jobs:
         with:
           context: ./client
           push: true
+          provenance: false
+          sbom: false
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/yapit-client:latest
 
       - name: Build & Push User Service
@@ -34,6 +36,8 @@ jobs:
         with:
           context: ./server/user
           push: true
+          provenance: false
+          sbom: false
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/yapit-user:latest
 
       - name: Build & Push Chat Service
@@ -41,6 +45,8 @@ jobs:
         with:
           context: ./server/chat
           push: true
+          provenance: false
+          sbom: false
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/yapit-chat:latest
 
       - name: Build & Push Mail Service
@@ -48,6 +54,8 @@ jobs:
         with:
           context: ./server/mail
           push: true
+          provenance: false
+          sbom: false
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/yapit-mail:latest
 
   deploy:
