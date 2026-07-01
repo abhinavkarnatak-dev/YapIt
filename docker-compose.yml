@@ -24,6 +24,9 @@ services:
     environment:
       RABBITMQ_HOST: rabbitmq
       CHAT_SERVICE: http://chat-service:5002
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     expose:
       - "8080"
     depends_on:
@@ -44,6 +47,9 @@ services:
       - ./server/chat/.env
     environment:
       USER_SERVICE: http://user-service:8080
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     expose:
       - "5002"
     depends_on:
@@ -64,6 +70,9 @@ services:
       - ./server/mail/.env
     environment:
       RABBITMQ_HOST: rabbitmq
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     expose:
       - "5001"
     depends_on:
