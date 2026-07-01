@@ -1,69 +1,85 @@
+version: "3.8"
+
 services:
   client:
-    image: yapit-client
-    restart: always
-    build:
-      context: ./client
+    image: ${DOCKERHUB_USERNAME}/yapit-client:latest
+    restart: unless-stopped
     ports:
       - "3000:3000"
     env_file:
       - ./client/.env
     networks:
       - yapit-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   user-service:
-    image: yapit-user
-    restart: always
-    build:
-      context: ./server/user
-    ports:
-      - "8080:8080"
+    image: ${DOCKERHUB_USERNAME}/yapit-user:latest
+    restart: unless-stopped
     env_file:
       - ./server/user/.env
     environment:
       RABBITMQ_HOST: rabbitmq
       CHAT_SERVICE: http://chat-service:5002
-    networks:
-      - yapit-network
+    expose:
+      - "8080"
     depends_on:
       rabbitmq:
         condition: service_healthy
+    networks:
+      - yapit-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   chat-service:
-    image: yapit-chat
-    restart: always
-    build:
-      context: ./server/chat
-    ports:
-      - "5002:5002"
+    image: ${DOCKERHUB_USERNAME}/yapit-chat:latest
+    restart: unless-stopped
     env_file:
       - ./server/chat/.env
     environment:
       USER_SERVICE: http://user-service:8080
-    networks:
-      - yapit-network
+    expose:
+      - "5002"
     depends_on:
       rabbitmq:
         condition: service_healthy
+    networks:
+      - yapit-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   mail-service:
-    image: yapit-mail
-    restart: always
-    build:
-      context: ./server/mail
+    image: ${DOCKERHUB_USERNAME}/yapit-mail:latest
+    restart: unless-stopped
     env_file:
       - ./server/mail/.env
     environment:
       RABBITMQ_HOST: rabbitmq
-    networks:
-      - yapit-network
+    expose:
+      - "5001"
     depends_on:
       rabbitmq:
         condition: service_healthy
+    networks:
+      - yapit-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   rabbitmq:
     image: rabbitmq:3-management
-    restart: always
+    restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin123
@@ -75,6 +91,11 @@ services:
       start_period: 20s
     networks:
       - yapit-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   yapit-network:
