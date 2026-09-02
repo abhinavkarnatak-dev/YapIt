@@ -15,9 +15,12 @@ export const redisClient = createClient({
   url: process.env.REDIS_URL,
   pingInterval: 1000 * 60 * 4,
   socket: {
+    // Never return an Error here - node-redis treats that as "stop reconnecting
+    // forever", which leaves the client permanently dead after any blip.
     reconnectStrategy: (retries: number) => {
-      if (retries > 10) return new Error("Redis max retries reached");
-      return Math.min(retries * 500, 3000);
+      const delay = Math.min(retries * 500, 5000);
+      console.log(`Redis reconnect attempt ${retries}, retrying in ${delay}ms`);
+      return delay;
     },
     keepAlive: true,
   },

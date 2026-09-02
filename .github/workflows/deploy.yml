@@ -89,3 +89,9 @@ jobs:
             docker compose up -d --remove-orphans
 
             docker image prune -af
+
+            # image prune does not touch BuildKit cache or stopped containers
+            docker builder prune -af
+            docker container prune -f
+
+            df -h /

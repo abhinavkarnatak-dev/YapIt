@@ -13,10 +13,13 @@ const io = new Server(server, {
   },
 });
 
-const userSocketMap: Record<string, string> = {};
+const userSocketMap: Record<string, Set<string>> = {};
 
-export const getReceiverSocketId = (userId: string) => {
-  return userSocketMap[userId];
+const roomForUser = (userId: string) => `user:${userId}`;
+
+export const getUserRoom = (userId: string) => {
+  const sockets = userSocketMap[userId];
+  return sockets && sockets.size > 0 ? roomForUser(userId) : undefined;
 };
 
 io.on("connection", (socket) => {
@@ -25,22 +28,26 @@ io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId as string;
 
   if (userId && userId !== "undefined") {
-    userSocketMap[userId] = socket.id;
+    if (!userSocketMap[userId]) {
+      userSocketMap[userId] = new Set();
+    }
+    userSocketMap[userId].add(socket.id);
+    socket.join(roomForUser(userId));
   }
 
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   socket.on("typing", ({ senderId, receiverId }) => {
-    const receiverSocketId = getReceiverSocketId(receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("typing", { senderId });
+    const receiverRoom = getUserRoom(receiverId);
+    if (receiverRoom) {
+      io.to(receiverRoom).emit("typing", { senderId });
     }
   });
 
   socket.on("stop_typing", ({ senderId, receiverId }) => {
-    const receiverSocketId = getReceiverSocketId(receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("stop_typing", { senderId });
+    const receiverRoom = getUserRoom(receiverId);
+    if (receiverRoom) {
+      io.to(receiverRoom).emit("stop_typing", { senderId });
     }
   });
 
@@ -51,7 +58,13 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("user disconnected", socket.id);
     if (userId && userId !== "undefined") {
-      delete userSocketMap[userId];
+      const sockets = userSocketMap[userId];
+      if (sockets) {
+        sockets.delete(socket.id);
+        if (sockets.size === 0) {
+          delete userSocketMap[userId];
+        }
+      }
     }
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });

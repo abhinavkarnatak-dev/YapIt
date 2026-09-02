@@ -45,7 +45,13 @@ export const loginUser = TryCatch(async (req: Request, res: Response) => {
     await redisClient.set(`user:${email}`, name, { EX: 60 * 5 });
   }
 
-  await publishToQueue("send-otp", { to: email, otp });
+  const published = await publishToQueue("send-otp", { to: email, otp });
+
+  if (!published) {
+    // Don't hold the caller to the rate limit for a failure on our side.
+    await redisClient.del(rateLimitKey);
+    return res.status(503).json({ message: "Could not send OTP right now. Please try again." });
+  }
 
   return res.status(200).json({ message: "OTP sent successfully." });
 });

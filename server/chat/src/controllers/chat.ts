@@ -5,7 +5,7 @@ import { Messages } from "../models/Messages.js";
 import axios from "axios";
 import { uploadToS3 } from "../config/uploadToS3.js";
 // import { user_service } from "../config/Services.js";
-import { io, getReceiverSocketId } from "../socket.js";
+import { io, getUserRoom } from "../socket.js";
 
 export const createNewChat = TryCatch(async (req: AuthenticatedRequest, res) => {
     const userId = req.user?._id;
@@ -29,13 +29,13 @@ export const createNewChat = TryCatch(async (req: AuthenticatedRequest, res) => 
         users: [userId, otherUserId]
     });
 
-    const receiverSocketId = getReceiverSocketId(otherUserId.toString());
-    if (receiverSocketId) {
-        io.to(receiverSocketId).emit("chat_created", { chatId: newChat._id });
+    const receiverRoom = getUserRoom(otherUserId.toString());
+    if (receiverRoom) {
+        io.to(receiverRoom).emit("chat_created", { chatId: newChat._id });
     }
-    const senderSocketId = getReceiverSocketId(userId?.toString() || "");
-    if (senderSocketId) {
-        io.to(senderSocketId).emit("chat_created", { chatId: newChat._id });
+    const senderRoom = getUserRoom(userId?.toString() || "");
+    if (senderRoom) {
+        io.to(senderRoom).emit("chat_created", { chatId: newChat._id });
     }
 
     res.status(200).json({ message: "New chat created", chatId: newChat._id });
@@ -62,10 +62,10 @@ export const createSystemWelcomeChat = TryCatch(async (req, res) => {
 
     await Chat.findByIdAndUpdate(newChat._id, { updatedAt: Date.now() });
 
-    const receiverSocketId = getReceiverSocketId(newUserId.toString());
-    if (receiverSocketId) {
-        io.to(receiverSocketId).emit("chat_created", { chatId: newChat._id });
-        io.to(receiverSocketId).emit("new_message", savedMessage);
+    const receiverRoom = getUserRoom(newUserId.toString());
+    if (receiverRoom) {
+        io.to(receiverRoom).emit("chat_created", { chatId: newChat._id });
+        io.to(receiverRoom).emit("new_message", savedMessage);
     }
 
     res.status(200).json({ success: true });
@@ -77,9 +77,9 @@ export const triggerConnectionReqEvent = TryCatch(async (req: AuthenticatedReque
         res.status(400).json({ message: "Receiver ID required" });
         return;
     }
-    const receiverSocketId = getReceiverSocketId(receiverId.toString());
-    if (receiverSocketId) {
-        io.to(receiverSocketId).emit("connection_request", { from: req.user?._id });
+    const receiverRoom = getUserRoom(receiverId.toString());
+    if (receiverRoom) {
+        io.to(receiverRoom).emit("connection_request", { from: req.user?._id });
     }
     res.status(200).json({ success: true });
 });
@@ -252,9 +252,9 @@ export const sendMessage = TryCatch(async (req: AuthenticatedRequest, res) => {
 
     await Chat.findByIdAndUpdate(chatId, { updatedAt: Date.now() });
 
-    const receiverSocketId = getReceiverSocketId(otherUserId.toString());
-    if (receiverSocketId) {
-        io.to(receiverSocketId).emit("new_message", savedMessage);
+    const receiverRoom = getUserRoom(otherUserId.toString());
+    if (receiverRoom) {
+        io.to(receiverRoom).emit("new_message", savedMessage);
     }
 
     res.status(201).json({ message: "Message sent successfully", savedMessage });
@@ -307,9 +307,9 @@ export const getMessagesByChat = TryCatch(async (req: AuthenticatedRequest, res)
     const otherUserId = chat.users.find((id) => id.toString() !== userId.toString());
 
     if (messageMarkedAsSeen.modifiedCount > 0 && otherUserId) {
-        const receiverSocketId = getReceiverSocketId(otherUserId.toString());
-        if (receiverSocketId) {
-            io.to(receiverSocketId).emit("messages_seen", { chatId, seenAt: seenAtTime });
+        const receiverRoom = getUserRoom(otherUserId.toString());
+        if (receiverRoom) {
+            io.to(receiverRoom).emit("messages_seen", { chatId, seenAt: seenAtTime });
         }
     }
 
@@ -364,9 +364,9 @@ export const deleteChat = TryCatch(async (req: AuthenticatedRequest, res) => {
     await Messages.deleteMany({ chatId: chat._id });
     await Chat.deleteOne({ _id: chat._id });
     
-    const receiverSocketId = getReceiverSocketId(otherUserId.toString());
-    if (receiverSocketId) {
-        io.to(receiverSocketId).emit("chat_deleted", { chatId: chat._id.toString() });
+    const receiverRoom = getUserRoom(otherUserId.toString());
+    if (receiverRoom) {
+        io.to(receiverRoom).emit("chat_deleted", { chatId: chat._id.toString() });
     }
     
     res.status(200).json({ message: "Chat deleted successfully" });
@@ -401,9 +401,9 @@ export const deleteMessage = TryCatch(async (req: AuthenticatedRequest, res) => 
         if (chat) {
             const otherUserId = chat.users.find((id) => id.toString() !== userId.toString());
             if (otherUserId) {
-                const receiverSocketId = getReceiverSocketId(otherUserId.toString());
-                if (receiverSocketId) {
-                    io.to(receiverSocketId).emit("message_deleted", { messageId: message._id, chatId: message.chatId });
+                const receiverRoom = getUserRoom(otherUserId.toString());
+                if (receiverRoom) {
+                    io.to(receiverRoom).emit("message_deleted", { messageId: message._id, chatId: message.chatId });
                 }
             }
         }
@@ -455,9 +455,9 @@ export const markMessagesAsSeen = TryCatch(async (req: AuthenticatedRequest, res
     const otherUserId = chat.users.find((id) => id.toString() !== userId.toString());
 
     if (messageMarkedAsSeen.modifiedCount > 0 && otherUserId) {
-        const receiverSocketId = getReceiverSocketId(otherUserId.toString());
-        if (receiverSocketId) {
-            io.to(receiverSocketId).emit("messages_seen", { chatId, seenAt: seenAtTime });
+        const receiverRoom = getUserRoom(otherUserId.toString());
+        if (receiverRoom) {
+            io.to(receiverRoom).emit("messages_seen", { chatId, seenAt: seenAtTime });
         }
     }
 
@@ -596,9 +596,9 @@ export const editMessage = TryCatch(async (req: AuthenticatedRequest, res) => {
     if (chat) {
         const otherUserId = chat.users.find((id) => id.toString() !== userId.toString());
         if (otherUserId) {
-            const receiverSocketId = getReceiverSocketId(otherUserId.toString());
-            if (receiverSocketId) {
-                io.to(receiverSocketId).emit("message_edited", {
+            const receiverRoom = getUserRoom(otherUserId.toString());
+            if (receiverRoom) {
+                io.to(receiverRoom).emit("message_edited", {
                     messageId: message._id,
                     chatId: message.chatId,
                     text: message.text,

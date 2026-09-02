@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   client:
     image: ${DOCKERHUB_USERNAME}/yapit-client:latest
@@ -8,6 +6,9 @@ services:
       - "3000:3000"
     env_file:
       - ./client/.env
+    environment:
+      NODE_OPTIONS: --max-old-space-size=224
+    mem_limit: 320m
     networks:
       - yapit-network
     logging:
@@ -24,6 +25,8 @@ services:
     environment:
       RABBITMQ_HOST: rabbitmq
       CHAT_SERVICE: http://chat-service:5002
+      NODE_OPTIONS: --max-old-space-size=144
+    mem_limit: 208m
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -47,6 +50,8 @@ services:
       - ./server/chat/.env
     environment:
       USER_SERVICE: http://user-service:8080
+      NODE_OPTIONS: --max-old-space-size=176
+    mem_limit: 256m
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -70,6 +75,8 @@ services:
       - ./server/mail/.env
     environment:
       RABBITMQ_HOST: rabbitmq
+      NODE_OPTIONS: --max-old-space-size=96
+    mem_limit: 160m
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -87,17 +94,21 @@ services:
         max-file: "3"
 
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3-alpine
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin123
+      RABBITMQ_VM_MEMORY_HIGH_WATERMARK: 160MiB
+    mem_limit: 256m
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 20s
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
     networks:
       - yapit-network
     logging:
@@ -105,6 +116,9 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  rabbitmq-data:
 
 networks:
   yapit-network:
