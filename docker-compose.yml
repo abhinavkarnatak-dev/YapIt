@@ -14,8 +14,8 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "5m"
+        max-file: "2"
 
   user-service:
     image: ${DOCKERHUB_USERNAME}/yapit-user:latest
@@ -40,8 +40,8 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "5m"
+        max-file: "2"
 
   chat-service:
     image: ${DOCKERHUB_USERNAME}/yapit-chat:latest
@@ -65,8 +65,8 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "5m"
+        max-file: "2"
 
   mail-service:
     image: ${DOCKERHUB_USERNAME}/yapit-mail:latest
@@ -90,8 +90,8 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "5m"
+        max-file: "2"
 
   rabbitmq:
     image: rabbitmq:3-alpine
@@ -114,8 +114,8 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "5m"
+        max-file: "2"
 
 volumes:
   rabbitmq-data:
